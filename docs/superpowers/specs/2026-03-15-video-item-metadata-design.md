@@ -32,15 +32,16 @@ Add `audioSampleRate: Int? = null` for audio-only formats.
 ```kotlin
 @Serializable
 data class VideoFormat(
-    val formatId: String,
-    val resolution: String,
-    val size: Long? = null,
-    val acodec: String? = null,
-    val vcodec: String? = null,
-    val filesize_approx: Long? = null,
-    val audioSampleRate: Int? = null
+    val formatId: String,      // unchanged — field 1
+    val resolution: String,    // unchanged — field 2
+    val size: Long? = null,    // unchanged — field 3
+    val acodec: String? = null,         // unchanged — field 4
+    val vcodec: String? = null,         // unchanged — field 5
+    val filesize_approx: Long? = null,  // unchanged — field 6
+    val audioSampleRate: Int? = null    // NEW — field 7 (appended last)
 )
 ```
+Field order is preserved exactly. `kotlinx-serialization` is name-based so order does not affect deserialization, but the field is appended last to minimise diff noise.
 
 ## Shared Helper Logic (commonMain)
 
@@ -89,17 +90,36 @@ Text(text = "State: ${task.state.name}", style = AppTypography.body)
 Text(text = formatState(task.state), style = AppTypography.body)
 val metadata = buildMetadataStrip(task)
 if (metadata.isNotEmpty()) {
-    Text(text = metadata, style = AppTypography.caption, color = AppColors.onSurfaceSecondary)
+    Text(text = metadata, style = AppTypography.caption)
 }
 ```
 
 The metadata strip sits below the state text. If all metadata fields are null/empty (e.g. `videoInfo` not yet fetched, `addedAt` is 0), the strip is omitted entirely.
 
+## Prerequisites
+
+### Add `kotlinx-datetime` dependency
+
+`kotlinx-datetime` is **not** currently in the project. Before implementing `formatAddedDate`, add it:
+
+1. In `gradle/libs.versions.toml`:
+   ```toml
+   [versions]
+   kotlinx-datetime = "0.6.1"
+
+   [libraries]
+   kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
+   ```
+
+2. In `shared/build.gradle.kts`, inside `commonMain.dependencies`:
+   ```kotlin
+   implementation(libs.kotlinx.datetime)
+   ```
+
 ## Assumptions & Constraints
 
-- `kotlinx-datetime` is already a dependency (used for date formatting)
 - No new UI components are needed
-- `AppTypography.caption` and `AppColors.onSurfaceSecondary` already exist in the theme
+- `AppTypography.caption` exists in the theme; use `AppColors.textSecondary` for the metadata strip text color
 - The `addedAt` field must be set at task creation time in the ViewModel/repository layer (outside scope of this spec, but noted)
 - Audio-only detection: `vcodec == null || vcodec == "none"` signals audio-only format
 
