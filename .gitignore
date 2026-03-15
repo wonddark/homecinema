@@ -1,0 +1,42 @@
+# Gradle
+.gradle/
+build/
+*/build/
+
+# Android
+local.properties
+.externalNativeBuild
+.cxx
+*.apk
+*.aar
+*.keystore
+!debug.keystore
+
+# Kotlin/JVM (Desktop)
+*.class
+*.jar
+.kotlin/
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+out/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# OS X
+.DS_Store
+
+# User-specific
+.gradle-history/
+.gradle-home/
+
+#builds
+androidApp/build/
+androidApp/release/
+desktopApp/build/
