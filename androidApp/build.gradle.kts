@@ -44,4 +44,5 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.androidx.activity.compose)
     implementation(libs.youtubedl.android)
+    implementation(libs.youtubedl.android.ffmpeg)
 }

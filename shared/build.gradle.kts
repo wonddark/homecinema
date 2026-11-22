@@ -48,6 +48,7 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.kotlinx.coroutines.android)
             implementation(libs.youtubedl.android)
+            implementation(libs.youtubedl.android.ffmpeg)
             implementation(libs.androidx.core.ktx)
         }
 

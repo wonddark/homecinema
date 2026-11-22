@@ -1,8 +1,11 @@
 package com.homecinema.core.downloader
 
+import com.homecinema.domain.DownloadTask
 import com.homecinema.domain.VideoInfo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.File
+import java.util.concurrent.ConcurrentHashMap
 
 actual fun createDownloaderEngine(): DownloaderEngine = DownloaderEngineDesktop()
 
@@ -11,78 +14,79 @@ actual fun createDownloaderEngine(): DownloaderEngine = DownloaderEngineDesktop(
  * Requires `yt-dlp` to be installed and available on PATH.
  */
 class DownloaderEngineDesktop : DownloaderEngine {
+    private val activeProcesses = ConcurrentHashMap<String, Process>()
+    private val tasks = ConcurrentHashMap<String, DownloadTask>()
+    private val outputDirs = ConcurrentHashMap<String, String>()
 
-    private val activeProcesses = mutableMapOf<String, Process>()
-
-    override suspend fun extractInfo(url: String): VideoInfo = withContext(Dispatchers.IO) {
-        val process = ProcessBuilder("yt-dlp", "--dump-json", "--no-playlist", url)
-            .redirectErrorStream(true)
-            .start()
-        val output = process.inputStream.bufferedReader().readText()
-        process.waitFor()
-
-        parseVideoInfo(output, url.hashCode().toString())
+    override val ffmpegAvailable: Boolean by lazy {
+        try {
+            ProcessBuilder("ffmpeg", "-version")
+                .redirectErrorStream(true)
+                .start()
+                .also { it.inputStream.readBytes() }
+                .waitFor() == 0
+        } catch (e: Exception) {
+            false
+        }
     }
+
+    override suspend fun extractInfo(url: String): VideoInfo =
+        withContext(Dispatchers.IO) {
+            val process =
+                ProcessBuilder("yt-dlp", "--dump-json", "--no-playlist", url)
+                    .redirectErrorStream(true)
+                    .start()
+            val output = process.inputStream.bufferedReader().readText()
+            process.waitFor()
+
+            parseVideoInfo(output, url.hashCode().toString())
+        }
 
     override suspend fun download(
-        taskId: String,
-        url: String,
-        formatId: String,
-        outputPath: String,
-        onProgress: (Float) -> Unit
-    ): String = withContext(Dispatchers.IO) {
-        val process = ProcessBuilder(
-            "yt-dlp",
-            "-f", formatId,
-            "-o", "$outputPath/%(title)s.%(ext)s",
-            "--newline",
-            url
-        )
-            .redirectErrorStream(true)
-            .start()
+        task: DownloadTask,
+        outputDir: String,
+        onProgress: (Float) -> Unit,
+    ): String =
+        withContext(Dispatchers.IO) {
+            tasks[task.id] = task
+            outputDirs[task.id] = outputDir
+            val command =
+                listOf("yt-dlp") + buildDownloadArgs(task, outputDir, ffmpegAvailable) + listOf("--newline", task.url)
+            val process = ProcessBuilder(command).redirectErrorStream(true).start()
+            activeProcesses[task.id] = process
 
-        var capturedPath = ""
-
-        // Track the process for cancellation support
-        activeProcesses[taskId] = process
-
-        process.inputStream.bufferedReader().useLines { lines ->
-            for (line in lines) {
-                if (line.startsWith("[download]")) {
-                    val match = Regex("""(\d+\.?\d*)%""").find(line)
-                    match?.groupValues?.get(1)?.toFloatOrNull()?.let { pct ->
-                        onProgress(pct / 100f)
+            val lines = mutableListOf<String>()
+            process.inputStream.bufferedReader().useLines { seq ->
+                for (line in seq) {
+                    lines += line
+                    if (line.startsWith("[download]")) {
+                        Regex("""(\d+\.?\d*)%""").find(line)?.groupValues?.get(1)?.toFloatOrNull()?.let {
+                            onProgress(it / 100f)
+                        }
                     }
-                    if (line.startsWith("[download] Destination: ")) {
-                        capturedPath = line.removePrefix("[download] Destination: ").trim()
-                    }
-                    // Handle already-downloaded: "[download] /path has already been downloaded"
-                    if (line.contains("has already been downloaded")) {
-                        val alreadyPath = line
-                            .removePrefix("[download] ")
-                            .removeSuffix(" has already been downloaded")
-                            .trim()
-                        if (capturedPath.isEmpty()) capturedPath = alreadyPath
-                    }
-                }
-                if (line.startsWith("[Merger] Merging formats into ")) {
-                    // Merger output supersedes the destination (final merged file)
-                    capturedPath = line
-                        .removePrefix("[Merger] Merging formats into \"")
-                        .trimEnd('"')
-                        .trim()
                 }
             }
+            val exit = process.waitFor()
+            activeProcesses.remove(task.id)
+            if (exit != 0) throw RuntimeException(lastErrorLine(lines.joinToString("\n")))
+            onProgress(1f)
+            parseFinalPath(lines.asSequence())
         }
-        process.waitFor()
-        activeProcesses.remove(taskId)
-        onProgress(1f)
-        capturedPath
-    }
 
-    override suspend fun cancel(taskId: String) = withContext(Dispatchers.IO) {
-        activeProcesses[taskId]?.destroy()
-        activeProcesses.remove(taskId)
-        Unit
-    }
+    override suspend fun pause(taskId: String): Unit =
+        withContext(Dispatchers.IO) {
+            activeProcesses.remove(taskId)?.destroy()
+            Unit
+        }
+
+    override suspend fun cancel(taskId: String): Unit =
+        withContext(Dispatchers.IO) {
+            activeProcesses.remove(taskId)?.destroy()
+            val task = tasks.remove(taskId)
+            val dir = outputDirs.remove(taskId)
+            if (task != null && dir != null) {
+                File(dir).listFiles()?.filter { isPartialFileOf(it.name, task) }?.forEach { it.delete() }
+            }
+            Unit
+        }
 }

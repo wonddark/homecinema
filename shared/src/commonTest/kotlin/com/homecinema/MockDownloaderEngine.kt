@@ -1,6 +1,7 @@
 package com.homecinema
 
 import com.homecinema.core.downloader.DownloaderEngine
+import com.homecinema.domain.DownloadTask
 import com.homecinema.domain.VideoFormat
 import com.homecinema.domain.VideoInfo
 
@@ -10,7 +11,10 @@ class MockDownloaderEngine(
     private val mockOutputPath: String = "mock/downloads/Mock Video Title.mp4"
 ) : DownloaderEngine {
 
+    override val ffmpegAvailable: Boolean = true
+
     var cancelledTaskId: String? = null
+    var pausedTaskId: String? = null
 
     override suspend fun extractInfo(url: String): VideoInfo {
         if (shouldFail) throw RuntimeException("Mock extraction failure")
@@ -27,10 +31,8 @@ class MockDownloaderEngine(
     }
 
     override suspend fun download(
-        taskId: String,
-        url: String,
-        formatId: String,
-        outputPath: String,
+        task: DownloadTask,
+        outputDir: String,
         onProgress: (Float) -> Unit
     ): String {
         if (shouldFail) throw RuntimeException("Mock download failure")
@@ -38,6 +40,10 @@ class MockDownloaderEngine(
             onProgress(step)
         }
         return mockOutputPath
+    }
+
+    override suspend fun pause(taskId: String) {
+        pausedTaskId = taskId
     }
 
     override suspend fun cancel(taskId: String) {

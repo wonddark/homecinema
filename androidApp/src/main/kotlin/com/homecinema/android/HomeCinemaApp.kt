@@ -3,6 +3,7 @@ package com.homecinema.android
 import android.app.Application
 import android.util.Log
 import com.homecinema.core.appContext
+import com.yausername.ffmpeg.FFmpeg
 import com.yausername.youtubedl_android.YoutubeDL
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -15,6 +16,7 @@ class HomeCinemaApp : Application() {
         super.onCreate()
         appContext = this
         YoutubeDL.getInstance().init(this)
+        FFmpeg.getInstance().init(this)
         GlobalScope.launch(Dispatchers.IO) {
             try {
                 YoutubeDL.getInstance().updateYoutubeDL(this@HomeCinemaApp)

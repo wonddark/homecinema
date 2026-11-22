@@ -30,11 +30,8 @@ class DownloadQueueManager(
             try {
                 val outputPath =
                     engine.download(
-                        taskId = nextTask.id,
-                        url = nextTask.url,
-                        formatId = "best",
-//                    formatId = nextTask.format ?: "best",
-                        outputPath = platformDownloadDir(),
+                        task = nextTask,
+                        outputDir = platformDownloadDir(),
                         onProgress = { progress -> updateTaskProgress(nextTask.id, progress) },
                     )
                 markTaskCompleted(nextTask.id, outputPath)
