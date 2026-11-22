@@ -6,6 +6,7 @@ import java.io.File
 import java.nio.file.AtomicMoveNotSupportedException
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
+import java.util.UUID
 
 actual fun platformDownloadDir(): String {
     val dir = File(System.getProperty("user.home"), "Downloads/GrabThatVideo")
@@ -44,11 +45,14 @@ private class JvmFileIO : FileIO {
 
     override fun write(path: String, text: String) = writeBytes(path, text.encodeToByteArray())
 
-    /** Writes to "$path.tmp" first, then renames it over the target so readers never see a half-written file. */
+    /**
+     * Writes to a uniquely named "$path.<uuid>.tmp" first, then renames it over the target so readers never see a
+     * half-written file and two concurrent writers never share (and steal) one temp file.
+     */
     override fun writeBytes(path: String, bytes: ByteArray) {
         val target = File(path)
         target.parentFile?.mkdirs()
-        val tmp = File("$path.tmp")
+        val tmp = File("$path.${UUID.randomUUID()}.tmp")
         tmp.writeBytes(bytes)
         try {
             Files.move(tmp.toPath(), target.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
