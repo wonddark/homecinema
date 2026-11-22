@@ -37,6 +37,7 @@ kotlin {
             implementation(compose.ui)
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization.json)
+            implementation(libs.kotlinx.datetime)
             implementation(compose.components.resources)
             // api: KtorThumbnailSaver's public constructor takes an HttpClient.
             api(libs.ktor.client.core)
