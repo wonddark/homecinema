@@ -4,49 +4,55 @@ import com.homecinema.core.downloader.DownloaderEngine
 import com.homecinema.domain.DownloadTask
 import com.homecinema.domain.VideoFormat
 import com.homecinema.domain.VideoInfo
+import kotlinx.coroutines.CompletableDeferred
 
-class MockDownloaderEngine(
-    private val shouldFail: Boolean = false,
-    private val progressSteps: List<Float> = listOf(0.25f, 0.5f, 0.75f, 1.0f),
-    private val mockOutputPath: String = "mock/downloads/Mock Video Title.mp4"
-) : DownloaderEngine {
-
+/**
+ * Each download() call parks on a fresh [CompletableDeferred] gate so tests decide when it ends.
+ * pause()/cancel() fail the gate, mimicking the real engine where killing the process makes download() throw.
+ */
+class MockDownloaderEngine : DownloaderEngine {
     override val ffmpegAvailable: Boolean = true
 
-    var cancelledTaskId: String? = null
-    var pausedTaskId: String? = null
+    private val gates = mutableMapOf<String, CompletableDeferred<String>>()
+    val downloadCalls = mutableListOf<DownloadTask>()
+    val pausedIds = mutableListOf<String>()
+    val cancelledIds = mutableListOf<String>()
 
-    override suspend fun extractInfo(url: String): VideoInfo {
-        if (shouldFail) throw RuntimeException("Mock extraction failure")
-        return VideoInfo(
+    override suspend fun extractInfo(url: String): VideoInfo =
+        VideoInfo(
             id = "mock-id",
             title = "Mock Video Title",
             duration = 120L,
-            formats = listOf(
-                VideoFormat("best", "best", null),
-                VideoFormat("137", "1080p", 100_000_000L),
-                VideoFormat("136", "720p", 50_000_000L)
-            )
+            formats = listOf(VideoFormat("137", "1080p", 100_000_000L)),
         )
-    }
 
     override suspend fun download(
         task: DownloadTask,
         outputDir: String,
-        onProgress: (Float) -> Unit
+        onProgress: (Float) -> Unit,
     ): String {
-        if (shouldFail) throw RuntimeException("Mock download failure")
-        for (step in progressSteps) {
-            onProgress(step)
-        }
-        return mockOutputPath
+        downloadCalls += task
+        val gate = CompletableDeferred<String>()
+        gates[task.id] = gate
+        onProgress(0.1f)
+        return gate.await()
+    }
+
+    fun complete(taskId: String, path: String) {
+        gates.getValue(taskId).complete(path)
+    }
+
+    fun fail(taskId: String, message: String) {
+        gates.getValue(taskId).completeExceptionally(RuntimeException(message))
     }
 
     override suspend fun pause(taskId: String) {
-        pausedTaskId = taskId
+        pausedIds += taskId
+        gates[taskId]?.completeExceptionally(RuntimeException("process killed"))
     }
 
     override suspend fun cancel(taskId: String) {
-        cancelledTaskId = taskId
+        cancelledIds += taskId
+        gates[taskId]?.completeExceptionally(RuntimeException("process killed"))
     }
 }

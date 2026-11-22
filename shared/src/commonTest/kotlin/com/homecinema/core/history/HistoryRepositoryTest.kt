@@ -44,6 +44,23 @@ class HistoryRepositoryTest {
     }
 
     @Test
+    fun `replacing an entry deletes its old thumbnail`() {
+        val r = repo()
+        r.add(entry("a", filePath = "/dl/x.mp4", thumb = "/thumbs/old.jpg"))
+        r.add(entry("b", filePath = "/dl/x.mp4", thumb = "/thumbs/new.jpg"))
+        assertFalse(io.exists("/thumbs/old.jpg"))
+        assertTrue(io.exists("/thumbs/new.jpg"))
+    }
+
+    @Test
+    fun `replacing an entry keeps a shared thumbnail`() {
+        val r = repo()
+        r.add(entry("a", filePath = "/dl/x.mp4", thumb = "/thumbs/same.jpg"))
+        r.add(entry("b", filePath = "/dl/x.mp4", thumb = "/thumbs/same.jpg"))
+        assertTrue(io.exists("/thumbs/same.jpg"))
+    }
+
+    @Test
     fun `missing file is flagged not dropped`() {
         val r = repo()
         r.add(entry("a"))

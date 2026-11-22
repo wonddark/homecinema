@@ -38,6 +38,8 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization.json)
             implementation(compose.components.resources)
+            // api: KtorThumbnailSaver's public constructor takes an HttpClient.
+            api(libs.ktor.client.core)
         }
 
         commonTest.dependencies {
@@ -50,11 +52,13 @@ kotlin {
             implementation(libs.youtubedl.android)
             implementation(libs.youtubedl.android.ffmpeg)
             implementation(libs.androidx.core.ktx)
+            implementation(libs.ktor.client.okhttp)
         }
 
         val desktopMain by getting {
             dependencies {
                 implementation(compose.desktop.currentOs)
+                implementation(libs.ktor.client.java)
             }
         }
     }

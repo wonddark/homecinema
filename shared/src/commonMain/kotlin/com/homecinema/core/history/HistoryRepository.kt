@@ -6,36 +6,39 @@ import com.homecinema.domain.HistoryEntry
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.getAndUpdate
 
+/** The persisted list is copy-on-write (StateFlow getAndUpdate) so concurrent callers never corrupt it. */
 class HistoryRepository(
     private val store: JsonFileStore<List<HistoryEntry>>,
     private val io: FileIO,
 ) {
-    private val persisted = ArrayList(store.load())
-    private val _entries = MutableStateFlow(withMissing(persisted))
+    private val persisted = MutableStateFlow(store.load())
+    private val _entries = MutableStateFlow(withMissing(persisted.value))
     val entries: StateFlow<List<HistoryEntry>> = _entries.asStateFlow()
 
     fun add(entry: HistoryEntry) {
-        persisted.removeAll { it.filePath == entry.filePath }
-        persisted.add(0, entry.copy(fileMissing = false))
+        val fresh = entry.copy(fileMissing = false)
+        val before = persisted.getAndUpdate { list -> listOf(fresh) + list.filter { it.filePath != entry.filePath } }
+        before
+            .filter { it.filePath == entry.filePath && it.thumbnailPath != entry.thumbnailPath }
+            .forEach { deleteThumbnail(it) }
         commit()
     }
 
     fun remove(id: String) {
-        val removed = persisted.filter { it.id == id }
-        persisted.removeAll(removed)
-        removed.forEach { deleteThumbnail(it) }
+        val before = persisted.getAndUpdate { list -> list.filter { it.id != id } }
+        before.filter { it.id == id }.forEach { deleteThumbnail(it) }
         commit()
     }
 
     fun clear() {
-        persisted.forEach { deleteThumbnail(it) }
-        persisted.clear()
+        persisted.getAndUpdate { emptyList() }.forEach { deleteThumbnail(it) }
         commit()
     }
 
     fun refreshMissing() {
-        _entries.value = withMissing(persisted)
+        _entries.value = withMissing(persisted.value)
     }
 
     private fun deleteThumbnail(entry: HistoryEntry) {
@@ -43,8 +46,9 @@ class HistoryRepository(
     }
 
     private fun commit() {
-        store.save(persisted.toList())
-        _entries.value = withMissing(persisted)
+        val current = persisted.value
+        store.save(current)
+        _entries.value = withMissing(current)
     }
 
     private fun withMissing(list: List<HistoryEntry>): List<HistoryEntry> =

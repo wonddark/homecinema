@@ -7,16 +7,26 @@ import android.content.Intent
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
+import com.homecinema.core.appStorageDir
 import com.homecinema.core.downloader.DownloaderEngine
 import com.homecinema.core.downloader.createDownloaderEngine
+import com.homecinema.core.history.HistoryRepository
+import com.homecinema.core.platformDownloadDir
+import com.homecinema.core.platformFileIO
+import com.homecinema.core.storage.JsonFileStore
 import com.homecinema.core.usecase.DownloadQueueManager
+import com.homecinema.core.usecase.KtorThumbnailSaver
 import com.homecinema.domain.DownloadState
+import com.homecinema.domain.DownloadTask
+import com.homecinema.domain.HistoryEntry
+import io.ktor.client.HttpClient
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.serialization.builtins.ListSerializer
 
 class DownloadService : Service() {
 
@@ -25,7 +35,7 @@ class DownloadService : Service() {
     override fun onCreate() {
         super.onCreate()
         engine = createDownloaderEngine()
-        queueManager = DownloadQueueManager(engine!!, serviceScope)
+        queueManager = createQueueManager(engine!!).also { it.restore() }
 
         createNotificationChannel()
         startForeground(NOTIFICATION_ID, buildNotification("Ready"))
@@ -40,6 +50,26 @@ class DownloadService : Service() {
             }
             updateNotification(text)
         }.launchIn(serviceScope)
+    }
+
+    // Temporary inline wiring; Task 11 moves this into the AppGraph.
+    private fun createQueueManager(engine: DownloaderEngine): DownloadQueueManager {
+        val io = platformFileIO()
+        val storageDir = appStorageDir()
+        val history = HistoryRepository(
+            JsonFileStore(io, "$storageDir/history.json", ListSerializer(HistoryEntry.serializer()), emptyList()),
+            io,
+        )
+        return DownloadQueueManager(
+            engine = engine,
+            history = history,
+            store = JsonFileStore(io, "$storageDir/queue.json", ListSerializer(DownloadTask.serializer()), emptyList()),
+            thumbnails = KtorThumbnailSaver(HttpClient(), io, "$storageDir/thumbnails"),
+            io = io,
+            downloadDir = platformDownloadDir(),
+            scope = serviceScope,
+            clock = System::currentTimeMillis,
+        )
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int = START_STICKY
