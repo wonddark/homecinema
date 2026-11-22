@@ -1,7 +1,6 @@
 package com.homecinema.core
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.awt.Desktop
@@ -52,5 +51,6 @@ private object DesktopPlatformActions : PlatformActions {
     }
 }
 
+/** Returns the process-wide desktop [PlatformActions]; the instance is stable and may be held long-term. */
 @Composable
-actual fun rememberPlatformActions(): PlatformActions = remember { DesktopPlatformActions }
+actual fun rememberPlatformActions(): PlatformActions = DesktopPlatformActions

@@ -11,14 +11,13 @@ import android.os.Environment
 import android.provider.DocumentsContract
 import android.provider.MediaStore
 import android.webkit.MimeTypeMap
-import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.ActivityResult
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.FileProvider
 import kotlinx.coroutines.CompletableDeferred
@@ -28,24 +27,41 @@ import java.io.File
 import java.util.concurrent.atomic.AtomicReference
 
 /**
- * The outstanding MediaStore delete request. Process-wide so a launcher re-registered after a
+ * The outstanding MediaStore delete request. Process-wide so a launcher registered again after a
  * configuration change still completes the deletion that is waiting on it.
  */
 private val pendingDelete = AtomicReference<CompletableDeferred<Boolean>?>(null)
 
+/** The launcher of the composition currently on screen; replaced on every recreation. */
+private val currentLauncher = AtomicReference<ActivityResultLauncher<IntentSenderRequest>?>(null)
+
+/**
+ * Returns the process-wide Android [PlatformActions]. The instance is stable, so callers (e.g. an
+ * app-level view-model surviving activity recreation) may hold it long-term: each composition
+ * registers its activity-result launcher into a shared holder that the instance reads at use time.
+ */
 @Composable
 actual fun rememberPlatformActions(): PlatformActions {
-    val context = LocalContext.current.applicationContext
+    AndroidPlatformActions.bind(LocalContext.current.applicationContext)
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
         pendingDelete.getAndSet(null)?.complete(result.resultCode == Activity.RESULT_OK)
     }
-    return remember(context, launcher) { AndroidPlatformActions(context, launcher) }
+    DisposableEffect(launcher) {
+        currentLauncher.set(launcher)
+        onDispose { currentLauncher.compareAndSet(launcher, null) }
+    }
+    return AndroidPlatformActions
 }
 
-private class AndroidPlatformActions(
-    private val context: Context,
-    private val deleteLauncher: ManagedActivityResultLauncher<IntentSenderRequest, ActivityResult>,
-) : PlatformActions {
+private object AndroidPlatformActions : PlatformActions {
+    private val contextRef = AtomicReference<Context?>(null)
+
+    private val context: Context
+        get() = contextRef.get() ?: appContext
+
+    fun bind(applicationContext: Context) {
+        contextRef.compareAndSet(null, applicationContext)
+    }
 
     override fun openFile(path: String) {
         val file = File(path)
@@ -100,7 +116,8 @@ private class AndroidPlatformActions(
         pendingDelete.getAndSet(result)?.complete(false)
         return try {
             val sender = MediaStore.createDeleteRequest(context.contentResolver, listOf(uri)).intentSender
-            withContext(Dispatchers.Main) { deleteLauncher.launch(IntentSenderRequest.Builder(sender).build()) }
+            val launcher = currentLauncher.get() ?: return false
+            withContext(Dispatchers.Main) { launcher.launch(IntentSenderRequest.Builder(sender).build()) }
             result.await()
         } catch (_: RuntimeException) {
             false
@@ -174,7 +191,5 @@ private class AndroidPlatformActions(
             false
         }
 
-    private companion object {
-        const val EXTERNAL_STORAGE_AUTHORITY = "com.android.externalstorage.documents"
-    }
+    private const val EXTERNAL_STORAGE_AUTHORITY = "com.android.externalstorage.documents"
 }

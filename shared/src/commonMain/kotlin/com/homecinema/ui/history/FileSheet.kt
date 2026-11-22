@@ -28,6 +28,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -73,7 +74,8 @@ internal fun FileSheet(entry: HistoryEntry, actions: HistoryActions) {
         onDismissRequest = actions.onDismissSheet,
         sheetState = sheetState,
         shape = AppShapes.sheetTop,
-        containerColor = colors.surfaceSheet,
+        // No backdrop blur here, so composite the translucent token over the background to keep the sheet opaque.
+        containerColor = colors.surfaceSheet.compositeOver(colors.background),
         contentColor = colors.textPrimary,
         tonalElevation = 0.dp,
         scrimColor = colors.scrim,
