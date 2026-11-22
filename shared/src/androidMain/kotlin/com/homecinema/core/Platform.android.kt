@@ -3,6 +3,7 @@ package com.homecinema.core
 import android.content.Intent
 import android.os.Environment
 import androidx.core.content.FileProvider
+import com.homecinema.core.storage.FileIO
 import java.io.File
 
 actual fun platformDownloadDir(): String =
@@ -27,3 +28,24 @@ actual fun revealInFileBrowser(path: String) {
     }
     appContext.startActivity(intent)
 }
+
+private class JvmFileIO : FileIO {
+    override fun read(path: String): String? {
+        val file = File(path)
+        return if (file.isFile) file.readText() else null
+    }
+
+    override fun write(path: String, text: String) {
+        val file = File(path)
+        file.parentFile?.mkdirs()
+        file.writeText(text)
+    }
+
+    override fun exists(path: String): Boolean = File(path).exists()
+
+    override fun delete(path: String): Boolean = File(path).delete()
+}
+
+actual fun platformFileIO(): FileIO = JvmFileIO()
+
+actual fun appStorageDir(): String = appContext.filesDir.absolutePath
