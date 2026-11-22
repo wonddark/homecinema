@@ -50,7 +50,7 @@ class DownloaderEngineDesktop : DownloaderEngine {
                 val output = process.inputStream.bufferedReader().readText()
                 val exit = process.waitFor()
                 val errors = stderr.await()
-                if (exit != 0 || output.isBlank()) throw RuntimeException(lastErrorLine(errors))
+                if (exit != 0 || output.isBlank()) throw ytDlpFailure(errors)
                 parseVideoInfo(output, url.hashCode().toString())
             } finally {
                 process.destroy()

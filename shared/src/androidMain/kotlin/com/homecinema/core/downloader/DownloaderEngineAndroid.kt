@@ -70,7 +70,7 @@ class DownloaderEngineAndroid : DownloaderEngine {
                     val stderr = e.message.orEmpty()
                     Log.w(TAG, "extractInfo failed for $url: ${lastErrorLine(stderr)}")
                     logLong(stderr)
-                    throw RuntimeException(lastErrorLine(e.message.orEmpty()), e)
+                    throw ytDlpFailure(stderr).apply { initCause(e) }
                 }
             Log.i(TAG, "extractInfo took ${response.elapsedTime} ms for $url")
             val info =

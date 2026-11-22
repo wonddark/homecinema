@@ -43,4 +43,11 @@ class FailureReasonTest {
     @Test
     fun `null maps to download failed`() =
         assertEquals("Download failed", mapFailureReason(null))
+
+    @Test
+    fun `http 403 maps to blocked by site`() =
+        assertEquals(
+            "Blocked by site",
+            mapFailureReason("ERROR: [PornHub] x: Unable to download webpage: HTTP Error 403: Forbidden"),
+        )
 }

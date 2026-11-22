@@ -160,7 +160,7 @@ private fun DownloadCard(state: HomeState, actions: HomeActions) {
                     when (target) {
                         FetchState.Idle -> PlatformsRow()
                         is FetchState.Fetching -> FetchingContent()
-                        is FetchState.Failed -> FailedContent(actions.onRetryFetch)
+                        is FetchState.Failed -> FailedContent(target.reason, actions.onRetryFetch)
                         is FetchState.Ready -> ReadyContent(target, actions)
                     }
                 }
@@ -263,9 +263,24 @@ private fun Spinner() {
     )
 }
 
+/** Title and detail lines for a failed fetch. */
+private fun failedText(reason: FetchFailure): Pair<String, String> =
+    when (reason) {
+        FetchFailure.SiteBlocked ->
+            "This site blocks downloads from this app" to
+                "It refused the app's connection, even though the video may still play in a browser."
+        FetchFailure.Generic ->
+            "Couldn't fetch this video" to
+                "The link may be private, removed, or from a site we don't support yet."
+    }
+
 @Composable
-private fun FailedContent(onRetryFetch: () -> Unit) {
+private fun FailedContent(
+    reason: FetchFailure,
+    onRetryFetch: () -> Unit,
+) {
     val colors = LocalAppColors.current
+    val (title, detail) = failedText(reason)
     Row(
         modifier = Modifier.fillMaxWidth().padding(start = 4.dp, end = 4.dp, top = 2.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -283,14 +298,14 @@ private fun FailedContent(onRetryFetch: () -> Unit) {
         }
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
-                text = "Couldn't fetch this video",
+                text = title,
                 color = colors.textPrimary,
                 style = MaterialTheme.typography.titleSmall,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
             )
             Text(
-                text = "The link may be private, removed, or from a site we don't support yet.",
+                text = detail,
                 color = colors.textSecondary,
                 style = MaterialTheme.typography.bodyMedium,
                 fontSize = 13.sp,

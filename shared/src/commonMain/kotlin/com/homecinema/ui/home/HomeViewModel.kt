@@ -1,6 +1,7 @@
 package com.homecinema.ui.home
 
 import com.homecinema.core.downloader.DownloaderEngine
+import com.homecinema.core.downloader.SiteBlockedException
 import com.homecinema.core.format.QualityOption
 import com.homecinema.core.format.buildFormatOptions
 import com.homecinema.core.usecase.DownloadQueue
@@ -124,9 +125,12 @@ class HomeViewModel(
                 Result.failure(e)
             }
             if (token != fetchToken) return@launch
-            _state.update { it.copy(fetch = result.fold({ info -> ready(url, info) }, { FetchState.Failed(url) })) }
+            _state.update { it.copy(fetch = result.fold({ info -> ready(url, info) }, { e -> FetchState.Failed(url, fetchFailure(e)) })) }
         }
     }
+
+    private fun fetchFailure(e: Throwable): FetchFailure =
+        if (e is SiteBlockedException) FetchFailure.SiteBlocked else FetchFailure.Generic
 
     private fun ready(url: String, info: VideoInfo): FetchState.Ready {
         val options = buildFormatOptions(info.formats, engine.ffmpegAvailable)

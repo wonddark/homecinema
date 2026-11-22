@@ -2,6 +2,7 @@ package com.homecinema.ui.home
 
 import com.homecinema.MockDownloaderEngine
 import com.homecinema.core.downloader.DownloaderEngine
+import com.homecinema.core.downloader.SiteBlockedException
 import com.homecinema.core.usecase.DownloadQueue
 import com.homecinema.domain.DownloadTask
 import com.homecinema.domain.MediaKind
@@ -104,6 +105,14 @@ class HomeViewModelTest {
         vm.onPaste("https://x.com/v")
         runCurrent()
         assertEquals(FetchState.Failed("https://x.com/v"), vm.state.value.fetch)
+    }
+
+    @Test
+    fun `site blocked failure is reported as blocked`() = runTest {
+        val (vm, _) = vm { throw SiteBlockedException("ERROR: HTTP Error 403: Forbidden") }
+        vm.onPaste("https://x.com/v")
+        runCurrent()
+        assertEquals(FetchState.Failed("https://x.com/v", FetchFailure.SiteBlocked), vm.state.value.fetch)
     }
 
     @Test
