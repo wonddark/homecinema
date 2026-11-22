@@ -25,6 +25,14 @@ fun outputTemplate(
     outputDir: String,
 ): String = "$outputDir/%(title)s [%(id)s] ${task.qualityLabel}.%(ext)s"
 
+private val ownPartialFile = Regex("""\[[^\]]+] [^/]+\.(part|ytdl)$""")
+
+/**
+ * True for a partial-download file produced from [outputTemplate] (the "[<id>] <quality>" signature,
+ * including yt-dlp's ".f<id>.<ext>.part" forms). Anything else in the folder belongs to someone else.
+ */
+fun isOwnPartialFile(fileName: String): Boolean = ownPartialFile.containsMatchIn(fileName)
+
 /** True for a partial-download file (.part / .ytdl) that belongs to [task]. */
 fun isPartialFileOf(
     fileName: String,

@@ -228,4 +228,20 @@ class DownloadQueueManagerTest {
             assertEquals("Download failed", t.errorReason)
             assertTrue(history.entries.value.isEmpty())
         }
+
+    @Test
+    fun `sweep keeps foreign part files`() =
+        runTest {
+            io.write("dl/foreign.zip.part", "x")
+            io.write("dl/Some Video.mp4.part", "x")
+            io.write("dl/T [zzz] 720p.mp4.part", "x")
+            io.write("dl/T [zzz] 720p.f137.mp4.part", "x")
+            val m = manager()
+            m.restore()
+            runCurrent()
+            assertTrue(io.exists("dl/foreign.zip.part"))
+            assertTrue(io.exists("dl/Some Video.mp4.part"))
+            assertFalse(io.exists("dl/T [zzz] 720p.mp4.part"))
+            assertFalse(io.exists("dl/T [zzz] 720p.f137.mp4.part"))
+        }
 }

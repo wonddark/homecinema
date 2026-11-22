@@ -1,6 +1,7 @@
 package com.homecinema.core.usecase
 
 import com.homecinema.core.downloader.DownloaderEngine
+import com.homecinema.core.downloader.isOwnPartialFile
 import com.homecinema.core.downloader.isPartialFileOf
 import com.homecinema.core.downloader.mapFailureReason
 import com.homecinema.core.history.HistoryRepository
@@ -47,7 +48,7 @@ class DownloadQueueManager(
     /** Non-completed tasks in insertion order. */
     val tasks: StateFlow<List<DownloadTask>> = _tasks.asStateFlow()
 
-    /** Loads queue.json, turns DOWNLOADING into PAUSED, deletes orphan partial files, then starts queued tasks. */
+    /** Loads queue.json, turns DOWNLOADING into PAUSED, deletes our own orphan partial files, then starts queued tasks. */
     fun restore() =
         locked {
             _tasks.value =
@@ -196,7 +197,7 @@ class DownloadQueueManager(
         io
             .list(downloadDir)
             .map { it.substringAfterLast('/').substringAfterLast('\\') to it }
-            .filter { (name, _) -> name.endsWith(".part") || name.endsWith(".ytdl") }
+            .filter { (name, _) -> isOwnPartialFile(name) }
             .filter { (name, _) -> tasks.none { isPartialFileOf(name, it) } }
             .forEach { (_, path) -> io.delete(path) }
     }
