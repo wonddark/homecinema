@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.homecinema.core.settings.ThemePreference
 import com.homecinema.ui.theme.AppTheme
 
 class MainActivity : ComponentActivity() {
@@ -17,7 +18,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         startForegroundService(Intent(this, DownloadService::class.java))
         setContent {
-            AppTheme {
+            AppTheme(ThemePreference.SYSTEM) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text("GrabThatVideo")
                 }

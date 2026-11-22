@@ -7,6 +7,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
+import com.homecinema.core.settings.ThemePreference
 import com.homecinema.ui.theme.AppTheme
 import kotlin.system.exitProcess
 
@@ -16,7 +17,7 @@ fun main() {
             onCloseRequest = ::exitApplication,
             title = "GrabThatVideo"
         ) {
-            AppTheme {
+            AppTheme(ThemePreference.SYSTEM) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text("GrabThatVideo")
                 }
