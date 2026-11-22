@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -26,6 +27,9 @@ import com.homecinema.ui.theme.AppColors
 import com.homecinema.ui.theme.AppShapes
 import com.homecinema.ui.theme.LocalAppColors
 import kotlin.math.roundToInt
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.TimeSource
 
 private val TrackShape = RoundedCornerShape(2.dp)
 
@@ -45,6 +49,8 @@ fun DownloadProgressCard(
 ) {
     val colors = LocalAppColors.current
     val failed = task.state == DownloadState.FAILED
+    val stateChangedAt = remember(task.state) { TimeSource.Monotonic.markNow() }
+    val guardedRemove = { if (removeAllowed(task.state, stateChangedAt.elapsedNow())) onRemove() }
     val border = when {
         failed -> colors.errorBorder
         highlighted -> colors.accentBorder
@@ -66,7 +72,7 @@ fun DownloadProgressCard(
                 cornerRadius = 12.dp,
             )
             Info(task, colors, Modifier.weight(1f))
-            Actions(task, colors, onPause, onResume, onRetry, onRemove)
+            Actions(task, colors, onPause, onResume, onRetry, guardedRemove)
         }
     }
 }
@@ -160,6 +166,15 @@ private fun Actions(
 @Composable
 private fun RemoveButton(colors: AppColors, onRemove: () -> Unit) {
     RoundIconButton(AppIcons.X, colors.textPrimary, onRemove, "Remove")
+}
+
+/** How long Remove ignores taps after Pause/failure moved it under the finger (Pause sat where Remove now is). */
+private val RemoveGuard = 600.milliseconds
+
+/** False while a PAUSED/FAILED card is younger than [RemoveGuard], so a double-tap on Pause cannot remove it. */
+internal fun removeAllowed(state: DownloadState, sinceStateChange: Duration): Boolean {
+    val guarded = state == DownloadState.PAUSED || state == DownloadState.FAILED
+    return !guarded || sinceStateChange >= RemoveGuard
 }
 
 /**
