@@ -23,6 +23,8 @@ class YtDlpArgsTest {
         assertTrue(args.hasPair("--merge-output-format", "mp4"))
         assertTrue("--continue" in args)
         assertTrue("--no-playlist" in args)
+        assertTrue("--newline" in args)
+        assertTrue("--no-mtime" in args)
     }
 
     @Test

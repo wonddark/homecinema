@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 actual fun createDownloaderEngine(): DownloaderEngine = DownloaderEngineAndroid()
 
-private val FLAG_ONLY = setOf("--continue", "--no-playlist", "--no-mtime")
+private val FLAG_ONLY = setOf("--continue", "--newline", "--no-playlist", "--no-mtime")
 
 class DownloaderEngineAndroid : DownloaderEngine {
     override val ffmpegAvailable: Boolean = true

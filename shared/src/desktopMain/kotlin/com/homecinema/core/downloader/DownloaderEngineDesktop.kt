@@ -51,23 +51,29 @@ class DownloaderEngineDesktop : DownloaderEngine {
             tasks[task.id] = task
             outputDirs[task.id] = outputDir
             val command =
-                listOf("yt-dlp") + buildDownloadArgs(task, outputDir, ffmpegAvailable) + listOf("--newline", task.url)
+                listOf("yt-dlp") + buildDownloadArgs(task, outputDir, ffmpegAvailable) + listOf(task.url)
             val process = ProcessBuilder(command).redirectErrorStream(true).start()
             activeProcesses[task.id] = process
 
             val lines = mutableListOf<String>()
-            process.inputStream.bufferedReader().useLines { seq ->
-                for (line in seq) {
-                    lines += line
-                    if (line.startsWith("[download]")) {
-                        Regex("""(\d+\.?\d*)%""").find(line)?.groupValues?.get(1)?.toFloatOrNull()?.let {
-                            onProgress(it / 100f)
+            val exit =
+                try {
+                    process.inputStream.bufferedReader().useLines { seq ->
+                        for (line in seq) {
+                            lines += line
+                            if (line.startsWith("[download]")) {
+                                Regex("""(\d+\.?\d*)%""").find(line)?.groupValues?.get(1)?.toFloatOrNull()?.let {
+                                    onProgress(it / 100f)
+                                }
+                            }
                         }
                     }
+                    process.waitFor()
+                } finally {
+                    // Remove only our own entry: a resumed download may already have registered a new process.
+                    activeProcesses.remove(task.id, process)
+                    process.destroy()
                 }
-            }
-            val exit = process.waitFor()
-            activeProcesses.remove(task.id)
             if (exit != 0) throw RuntimeException(lastErrorLine(lines.joinToString("\n")))
             onProgress(1f)
             parseFinalPath(lines.asSequence())

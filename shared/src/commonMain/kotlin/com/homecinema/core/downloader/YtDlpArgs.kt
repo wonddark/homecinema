@@ -16,7 +16,7 @@ fun buildDownloadArgs(
     } else {
         args += listOf("-f", format)
     }
-    args += listOf("-o", outputTemplate(task, outputDir), "--continue", "--no-playlist", "--no-mtime")
+    args += listOf("-o", outputTemplate(task, outputDir), "--continue", "--newline", "--no-playlist", "--no-mtime")
     return args
 }
 
