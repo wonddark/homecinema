@@ -23,9 +23,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.homecinema.domain.DownloadState
 import com.homecinema.domain.DownloadTask
+import com.homecinema.ui.text.ProgressLabels
+import com.homecinema.ui.text.progressLabels
 import com.homecinema.ui.theme.AppColors
 import com.homecinema.ui.theme.AppShapes
 import com.homecinema.ui.theme.LocalAppColors
+import homecinema.shared.generated.resources.Res
+import homecinema.shared.generated.resources.card_pause
+import homecinema.shared.generated.resources.card_remove
+import homecinema.shared.generated.resources.card_resume
+import homecinema.shared.generated.resources.card_retry
+import org.jetbrains.compose.resources.stringResource
 import kotlin.math.roundToInt
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -102,7 +110,7 @@ private fun Info(task: DownloadTask, colors: AppColors, modifier: Modifier) {
             overflow = TextOverflow.Ellipsis,
         )
         Text(
-            text = progressMeta(task),
+            text = progressMeta(task, progressLabels(task)),
             color = if (failed) colors.error else colors.textSecondary,
             style = MaterialTheme.typography.bodySmall,
             fontSize = 12.sp,
@@ -149,14 +157,14 @@ private fun Actions(
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
         when (task.state) {
             DownloadState.DOWNLOADING, DownloadState.COMPLETED ->
-                RoundIconButton(AppIcons.Pause, colors.textPrimary, onPause, "Pause")
+                RoundIconButton(AppIcons.Pause, colors.textPrimary, onPause, stringResource(Res.string.card_pause))
             DownloadState.QUEUED -> RemoveButton(colors, onRemove)
             DownloadState.PAUSED -> {
-                RoundIconButton(AppIcons.Play, colors.accent, onResume, "Resume")
+                RoundIconButton(AppIcons.Play, colors.accent, onResume, stringResource(Res.string.card_resume))
                 RemoveButton(colors, onRemove)
             }
             DownloadState.FAILED -> {
-                RoundIconButton(AppIcons.RotateCcw, colors.accent, onRetry, "Retry")
+                RoundIconButton(AppIcons.RotateCcw, colors.accent, onRetry, stringResource(Res.string.card_retry))
                 RemoveButton(colors, onRemove)
             }
         }
@@ -165,7 +173,7 @@ private fun Actions(
 
 @Composable
 private fun RemoveButton(colors: AppColors, onRemove: () -> Unit) {
-    RoundIconButton(AppIcons.X, colors.textPrimary, onRemove, "Remove")
+    RoundIconButton(AppIcons.X, colors.textPrimary, onRemove, stringResource(Res.string.card_remove))
 }
 
 /** How long Remove ignores taps after Pause/failure moved it under the finger (Pause sat where Remove now is). */
@@ -182,16 +190,16 @@ internal fun removeAllowed(state: DownloadState, sinceStateChange: Duration): Bo
  * Downloading `"<extractor> · <quality> · <size>"` (`Starting…` at 0%), Queued `"… · Queued"`,
  * Paused `"Paused · <quality> · <size>"`, Failed `"Failed · <reason>"`.
  */
-fun progressMeta(task: DownloadTask): String {
+fun progressMeta(task: DownloadTask, labels: ProgressLabels): String {
     val extractor = task.videoInfo?.extractor
     val quality = task.qualityLabel
     val size = task.sizeBytes?.let(::formatSize)
     val segments = when (task.state) {
-        DownloadState.QUEUED -> listOf(extractor, quality, "Queued")
-        DownloadState.PAUSED -> listOf("Paused", quality, size)
-        DownloadState.FAILED -> listOf("Failed", task.failure?.name)
+        DownloadState.QUEUED -> listOf(extractor, quality, labels.queued)
+        DownloadState.PAUSED -> listOf(labels.paused, quality, size)
+        DownloadState.FAILED -> listOf(labels.failed, labels.failure)
         DownloadState.DOWNLOADING, DownloadState.COMPLETED -> {
-            val tail = if (task.progress == 0f) "Starting…" else size
+            val tail = if (task.progress == 0f) labels.starting else size
             listOf(extractor, quality, tail)
         }
     }
