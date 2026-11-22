@@ -90,15 +90,18 @@ class HistoryViewModelTest {
     @Test
     fun `summary sums known sizes only`() = runTest {
         val c = ctx(entry("1", "a", size = 100 * mb), entry("2", "b", size = null), entry("3", "c", size = 50 * mb))
-        assertEquals("3 files · 150 MB", c.vm.state.value.summary)
+        assertEquals(3, c.vm.state.value.summaryCount)
+        assertEquals(150 * mb, c.vm.state.value.summaryBytes)
         c.vm.onQuery("a"); runCurrent()
-        assertEquals("1 file · 100 MB", c.vm.state.value.summary)
+        assertEquals(1, c.vm.state.value.summaryCount)
+        assertEquals(100 * mb, c.vm.state.value.summaryBytes)
     }
 
     @Test
     fun `summary without known sizes shows count only`() = runTest {
         val c = ctx(entry("1", "a", size = null), entry("2", "b", size = null))
-        assertEquals("2 files", c.vm.state.value.summary)
+        assertEquals(2, c.vm.state.value.summaryCount)
+        assertNull(c.vm.state.value.summaryBytes)
     }
 
     @Test
@@ -144,7 +147,7 @@ class HistoryViewModelTest {
         c.vm.onOpenSheet(c.repo.entries.value.first()); runCurrent()
         c.vm.onRemove(); c.vm.onConfirm(); runCurrent()
         assertEquals(1, c.repo.entries.value.size)
-        assertEquals("Couldn't delete file", c.vm.state.value.snackbar)
+        assertEquals(HistorySnackbar.DELETE_FAILED, c.vm.state.value.snackbar)
         c.vm.onSnackbarShown(); runCurrent()
         assertNull(c.vm.state.value.snackbar)
     }
@@ -155,7 +158,7 @@ class HistoryViewModelTest {
         c.actions.shareResult = ShareResult.PATH_COPIED
         c.vm.onOpenSheet(c.repo.entries.value.first { it.id == "1" }); runCurrent()
         c.vm.onShare(); runCurrent()
-        assertEquals("Path copied", c.vm.state.value.snackbar)
+        assertEquals(HistorySnackbar.PATH_COPIED, c.vm.state.value.snackbar)
         c.actions.calls.clear()
         c.vm.onOpenSheet(c.repo.entries.value.first { it.id == "2" }); runCurrent()
         c.vm.onPlay(); c.vm.onShare(); c.vm.onShowInFolder()

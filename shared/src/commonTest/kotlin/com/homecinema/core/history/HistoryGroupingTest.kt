@@ -47,8 +47,8 @@ class HistoryGroupingTest {
 
     @Test
     fun `sheet timestamp variants`() {
-        assertEquals("Today, 18:42", sheetTimestamp(at(2026, 11, 21, 18, 42), now, zone))
-        assertEquals("Yesterday, 09:05", sheetTimestamp(at(2026, 11, 20, 9, 5), now, zone))
-        assertEquals("12 Nov, 18:42", sheetTimestamp(at(2026, 11, 12, 18, 42), now, zone))
+        assertEquals(SheetStamp(StampDay.TODAY, 21, 11, "18:42"), sheetTimestamp(at(2026, 11, 21, 18, 42), now, zone))
+        assertEquals(SheetStamp(StampDay.YESTERDAY, 20, 11, "09:05"), sheetTimestamp(at(2026, 11, 20, 9, 5), now, zone))
+        assertEquals(SheetStamp(StampDay.DATE, 12, 11, "18:42"), sheetTimestamp(at(2026, 11, 12, 18, 42), now, zone))
     }
 }

@@ -38,10 +38,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.homecinema.core.settings.ThemePreference
 import com.homecinema.ui.components.AppIcons
+import com.homecinema.ui.text.themeLabel
 import com.homecinema.ui.theme.AppShapes
 import com.homecinema.ui.theme.LocalAppColors
+import homecinema.shared.generated.resources.Res
+import homecinema.shared.generated.resources.action_more
+import homecinema.shared.generated.resources.menu_clear_history
+import homecinema.shared.generated.resources.menu_close
+import homecinema.shared.generated.resources.menu_open_folder
+import homecinema.shared.generated.resources.menu_selected
+import homecinema.shared.generated.resources.menu_theme
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 
 private val ItemShape = RoundedCornerShape(10.dp)
 
@@ -65,7 +74,7 @@ internal fun MoreMenuOverlay(
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
-                onClickLabel = "Close menu",
+                onClickLabel = stringResource(Res.string.menu_close),
                 onClick = onDismiss,
             ),
     )
@@ -74,7 +83,7 @@ internal fun MoreMenuOverlay(
         horizontalAlignment = Alignment.End,
     ) {
         Row(modifier = Modifier.height(HEADER_HEIGHT), verticalAlignment = Alignment.CenterVertically) {
-            HeaderButton(AppIcons.Ellipsis, "More", onDismiss, active = true)
+            HeaderButton(AppIcons.Ellipsis, stringResource(Res.string.action_more), onDismiss, active = true)
         }
         Spacer(Modifier.height(8.dp))
         MoreMenu(
@@ -112,7 +121,7 @@ fun MoreMenu(
     ) {
         MenuItem(
             icon = AppIcons.Palette,
-            label = "Theme",
+            label = stringResource(Res.string.menu_theme),
             onClick = { themeExpanded = !themeExpanded },
             trailing = {
                 Text(
@@ -134,22 +143,13 @@ fun MoreMenu(
                 ThemeOption(option, selected = option == theme, onClick = { onTheme(option) })
             }
         }
-        MenuItem(AppIcons.FolderOpen, "Open downloads folder", onOpenDownloadsFolder)
+        MenuItem(AppIcons.FolderOpen, stringResource(Res.string.menu_open_folder), onOpenDownloadsFolder)
         Box(Modifier.padding(horizontal = 8.dp, vertical = 6.dp)) {
             HorizontalDivider(thickness = 1.dp, color = colors.borderMenu)
         }
-        MenuItem(AppIcons.Trash2, "Clear history", onClearHistory, destructive = true)
+        MenuItem(AppIcons.Trash2, stringResource(Res.string.menu_clear_history), onClearHistory, destructive = true)
     }
 }
-
-internal fun themeLabel(theme: ThemePreference): String =
-    when (theme) {
-        ThemePreference.SYSTEM -> "System"
-        ThemePreference.DARK -> "Dark"
-        ThemePreference.LIGHT -> "Light"
-        ThemePreference.OCEAN -> "Ocean"
-        ThemePreference.VOLT -> "Volt"
-    }
 
 @Composable
 private fun MenuItem(
@@ -212,7 +212,7 @@ private fun ThemeOption(option: ThemePreference, selected: Boolean, onClick: () 
         if (selected) {
             Icon(
                 painter = painterResource(AppIcons.Check),
-                contentDescription = "Selected",
+                contentDescription = stringResource(Res.string.menu_selected),
                 tint = colors.accent,
                 modifier = Modifier.size(16.dp),
             )

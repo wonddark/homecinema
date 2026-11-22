@@ -41,10 +41,22 @@ import com.homecinema.ui.components.HistoryRow
 import com.homecinema.ui.components.SectionLabel
 import com.homecinema.ui.components.Snackbar
 import com.homecinema.ui.components.Wordmark
+import com.homecinema.ui.text.filterLabel
+import com.homecinema.ui.text.historyGroupLabel
+import com.homecinema.ui.text.historySummaryText
+import com.homecinema.ui.text.snackbarText
 import com.homecinema.ui.theme.AppShapes
 import com.homecinema.ui.theme.LocalAppColors
+import homecinema.shared.generated.resources.Res
+import homecinema.shared.generated.resources.action_back
+import homecinema.shared.generated.resources.action_more
+import homecinema.shared.generated.resources.history_empty_body
+import homecinema.shared.generated.resources.history_empty_title
+import homecinema.shared.generated.resources.history_search_hint
+import homecinema.shared.generated.resources.history_title
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 
 /** The [HistoryViewModel] actions the History screen can trigger. */
 @Immutable
@@ -122,9 +134,9 @@ fun HistoryScreen(
         state.confirm?.let { request ->
             ConfirmDialog(request = request, onConfirm = actions.onConfirm, onDismiss = actions.onDismissConfirm)
         }
-        state.snackbar?.let { message ->
+        state.snackbar?.let { snackbar ->
             Snackbar(
-                message = message,
+                message = snackbarText(snackbar),
                 onShown = actions.onSnackbarShown,
                 modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 32.dp),
             )
@@ -140,18 +152,18 @@ internal fun Header(onBack: () -> Unit, onMore: () -> Unit, modifier: Modifier =
         horizontalArrangement = Arrangement.spacedBy(14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        HeaderButton(AppIcons.ChevronLeft, "Back", onBack)
+        HeaderButton(AppIcons.ChevronLeft, stringResource(Res.string.action_back), onBack)
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Wordmark(showMark = false)
             Text(
-                text = "History",
+                text = stringResource(Res.string.history_title),
                 color = LocalAppColors.current.textSecondary,
                 style = MaterialTheme.typography.labelMedium,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Medium,
             )
         }
-        HeaderButton(AppIcons.Ellipsis, "More", onMore)
+        HeaderButton(AppIcons.Ellipsis, stringResource(Res.string.action_more), onMore)
     }
 }
 
@@ -198,8 +210,8 @@ private fun HistoryList(state: HistoryState, actions: HistoryActions) {
         if (state.groups.isEmpty()) {
             item(key = "empty") {
                 EmptyState(
-                    title = "No downloads yet",
-                    body = "Finished downloads will appear here.",
+                    title = stringResource(Res.string.history_empty_title),
+                    body = stringResource(Res.string.history_empty_body),
                     showSteps = false,
                     modifier = Modifier.padding(top = 20.dp),
                 )
@@ -207,7 +219,7 @@ private fun HistoryList(state: HistoryState, actions: HistoryActions) {
         }
         state.groups.forEach { (group, entries) ->
             item(key = "label-${group.name}") {
-                SectionLabel(group.label, Modifier.padding(top = 20.dp, bottom = 4.dp))
+                SectionLabel(historyGroupLabel(group), Modifier.padding(top = 20.dp, bottom = 4.dp))
             }
             itemsIndexed(entries, key = { _, e -> e.id }) { index, entry ->
                 HistoryRow(
@@ -248,7 +260,7 @@ private fun SearchField(query: String, onQuery: (String) -> Unit) {
                 decorationBox = { inner ->
                     Box(contentAlignment = Alignment.CenterStart) {
                         if (query.isEmpty()) {
-                            Text("Search downloads", style = textStyle, color = colors.textTertiary)
+                            Text(stringResource(Res.string.history_search_hint), style = textStyle, color = colors.textTertiary)
                         }
                         inner()
                     }
@@ -272,20 +284,13 @@ private fun FilterBar(state: HistoryState, onFilter: (HistoryFilter) -> Unit, mo
             }
         }
         Text(
-            text = state.summary,
+            text = historySummaryText(state.summaryCount, state.summaryBytes),
             color = LocalAppColors.current.textSecondary,
             style = MaterialTheme.typography.bodySmall,
             fontSize = 12.sp,
         )
     }
 }
-
-private fun filterLabel(filter: HistoryFilter): String =
-    when (filter) {
-        HistoryFilter.ALL -> "All"
-        HistoryFilter.VIDEO -> "Video"
-        HistoryFilter.AUDIO -> "Audio"
-    }
 
 @Composable
 private fun FilterChip(label: String, count: Int, selected: Boolean, onClick: () -> Unit) {

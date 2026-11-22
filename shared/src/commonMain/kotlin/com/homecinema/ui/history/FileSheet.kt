@@ -43,13 +43,20 @@ import com.homecinema.core.history.sheetTimestamp
 import com.homecinema.domain.HistoryEntry
 import com.homecinema.ui.components.AppIcons
 import com.homecinema.ui.components.HistoryThumbnail
+import com.homecinema.ui.text.sheetStampText
 import com.homecinema.ui.theme.AppShapes
 import com.homecinema.ui.theme.LocalAppColors
+import homecinema.shared.generated.resources.Res
+import homecinema.shared.generated.resources.file_play
+import homecinema.shared.generated.resources.file_remove
+import homecinema.shared.generated.resources.file_share
+import homecinema.shared.generated.resources.file_show_in_folder
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 
 private const val DISABLED_ALPHA = 0.4f
 
@@ -88,11 +95,11 @@ internal fun FileSheet(entry: HistoryEntry, actions: HistoryActions) {
             FileHeader(entry)
             Column {
                 val enabled = !entry.fileMissing
-                SheetAction(AppIcons.Play, "Play", enabled) { closeThen(actions.onPlay) }
-                SheetAction(AppIcons.Share2, "Share", enabled) { closeThen(actions.onShare) }
-                SheetAction(AppIcons.FolderOpen, "Show in folder", enabled) { closeThen(actions.onShowInFolder) }
+                SheetAction(AppIcons.Play, stringResource(Res.string.file_play), enabled) { closeThen(actions.onPlay) }
+                SheetAction(AppIcons.Share2, stringResource(Res.string.file_share), enabled) { closeThen(actions.onShare) }
+                SheetAction(AppIcons.FolderOpen, stringResource(Res.string.file_show_in_folder), enabled) { closeThen(actions.onShowInFolder) }
                 HorizontalDivider(thickness = 1.dp, color = colors.border)
-                SheetAction(AppIcons.Trash2, "Remove", enabled = true, destructive = true) {
+                SheetAction(AppIcons.Trash2, stringResource(Res.string.file_remove), enabled = true, destructive = true) {
                     closeThen(actions.onRemove)
                 }
             }
@@ -129,10 +136,10 @@ private fun DrawScope.drawTopEdge(color: Color) {
 @Composable
 private fun FileHeader(entry: HistoryEntry) {
     val colors = LocalAppColors.current
-    val meta = remember(entry) {
-        val stamp = sheetTimestamp(entry.completedAt, Clock.System.now().toEpochMilliseconds(), TimeZone.currentSystemDefault())
-        "${historyMeta(entry)} · $stamp"
+    val stamp = remember(entry) {
+        sheetTimestamp(entry.completedAt, Clock.System.now().toEpochMilliseconds(), TimeZone.currentSystemDefault())
     }
+    val meta = "${historyMeta(entry)} · ${sheetStampText(stamp)}"
     Column {
         Row(
             modifier = Modifier.fillMaxWidth().padding(top = 4.dp, bottom = 14.dp),

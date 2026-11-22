@@ -6,14 +6,12 @@ import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
-enum class HistoryGroup(val label: String) {
-    TODAY("TODAY"),
-    YESTERDAY("YESTERDAY"),
-    LAST_WEEK("LAST WEEK"),
-    EARLIER("EARLIER"),
-}
+enum class HistoryGroup { TODAY, YESTERDAY, LAST_WEEK, EARLIER }
 
-private val MONTHS = listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+enum class StampDay { TODAY, YESTERDAY, DATE }
+
+/** Structured sheet timestamp; the UI layer turns it into localized text. */
+data class SheetStamp(val day: StampDay, val dayOfMonth: Int, val monthNumber: Int, val time: String)
 
 private fun daysAgo(completedAt: Long, now: Long, zone: TimeZone): Int {
     val then = Instant.fromEpochMilliseconds(completedAt).toLocalDateTime(zone).date
@@ -35,11 +33,14 @@ fun historyMeta(e: HistoryEntry): String {
     return parts.joinToString(" · ")
 }
 
-fun sheetTimestamp(completedAt: Long, now: Long, zone: TimeZone): String {
+fun sheetTimestamp(completedAt: Long, now: Long, zone: TimeZone): SheetStamp {
     val dt = Instant.fromEpochMilliseconds(completedAt).toLocalDateTime(zone)
     val time = "${dt.hour.toString().padStart(2, '0')}:${dt.minute.toString().padStart(2, '0')}"
     val days = daysAgo(completedAt, now, zone)
-    if (days <= 0) return "Today, $time"
-    if (days == 1) return "Yesterday, $time"
-    return "${dt.dayOfMonth} ${MONTHS[dt.monthNumber - 1]}, $time"
+    val day = when {
+        days <= 0 -> StampDay.TODAY
+        days == 1 -> StampDay.YESTERDAY
+        else -> StampDay.DATE
+    }
+    return SheetStamp(day, dt.dayOfMonth, dt.monthNumber, time)
 }

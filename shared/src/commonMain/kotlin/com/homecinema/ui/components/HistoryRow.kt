@@ -26,7 +26,11 @@ import com.homecinema.domain.HistoryEntry
 import com.homecinema.domain.MediaKind
 import com.homecinema.ui.theme.AppShapes
 import com.homecinema.ui.theme.LocalAppColors
+import homecinema.shared.generated.resources.Res
+import homecinema.shared.generated.resources.file_not_found
+import homecinema.shared.generated.resources.file_options
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 
 private const val MISSING_THUMB_ALPHA = 0.35f
 
@@ -74,7 +78,7 @@ fun HistoryRow(
             ) {
                 Icon(
                     painter = painterResource(AppIcons.EllipsisVertical),
-                    contentDescription = "File options",
+                    contentDescription = stringResource(Res.string.file_options),
                     tint = colors.textSecondary,
                     modifier = Modifier.size(18.dp),
                 )
@@ -127,7 +131,7 @@ private fun MissingNotice() {
             modifier = Modifier.size(13.dp),
         )
         Text(
-            text = "File not found · moved or deleted",
+            text = stringResource(Res.string.file_not_found),
             color = colors.warning,
             style = MaterialTheme.typography.bodySmall,
             fontSize = 12.sp,

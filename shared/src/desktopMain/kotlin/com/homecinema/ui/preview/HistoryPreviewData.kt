@@ -44,7 +44,7 @@ object HistoryPreviewData {
         onSnackbarShown = {},
     )
 
-    val empty = HistoryState(summary = "0 files")
+    val empty = HistoryState(summaryCount = 0)
 
     fun populated(thumbnail: String? = null, missingStreetFood: Boolean = false): HistoryState {
         val today = listOf(
@@ -62,7 +62,8 @@ object HistoryPreviewData {
         )
         return HistoryState(
             counts = mapOf(HistoryFilter.ALL to 14, HistoryFilter.VIDEO to 9, HistoryFilter.AUDIO to 5),
-            summary = "14 files · 2.3 GB",
+            summaryCount = 14,
+            summaryBytes = 2_300_000_000L,
             groups = listOf(
                 HistoryGroup.TODAY to today,
                 HistoryGroup.YESTERDAY to yesterday,
@@ -88,7 +89,8 @@ object HistoryPreviewData {
     fun longTitles(thumbnail: String? = null): HistoryState =
         HistoryState(
             counts = mapOf(HistoryFilter.ALL to 3, HistoryFilter.VIDEO to 2, HistoryFilter.AUDIO to 1),
-            summary = "3 files · 410 MB",
+            summaryCount = 3,
+            summaryBytes = 410_000_000L,
             groups = listOf(
                 HistoryGroup.TODAY to listOf(
                     video("l1", LONG_TITLE, "1080p", 248 * MB, 31 * 60, thumbnail, at(0, 10, 0)),

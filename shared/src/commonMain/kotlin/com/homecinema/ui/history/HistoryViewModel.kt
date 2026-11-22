@@ -9,7 +9,6 @@ import com.homecinema.core.settings.SettingsRepository
 import com.homecinema.core.settings.ThemePreference
 import com.homecinema.domain.HistoryEntry
 import com.homecinema.domain.MediaKind
-import com.homecinema.ui.components.formatSize
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,7 +37,7 @@ class HistoryViewModel(
         val sheetId: String? = null,
         val moreMenuOpen: Boolean = false,
         val confirm: ConfirmRequest? = null,
-        val snackbar: String? = null,
+        val snackbar: HistorySnackbar? = null,
     )
 
     private val ui = MutableStateFlow(Ui())
@@ -72,7 +71,8 @@ class HistoryViewModel(
             query = u.query,
             filter = u.filter,
             counts = counts,
-            summary = summarize(filtered),
+            summaryCount = filtered.size,
+            summaryBytes = filtered.mapNotNull { it.sizeBytes }.takeIf { it.isNotEmpty() }?.sum(),
             groups = groups,
             sheetFor = u.sheetId?.let { id -> entries.firstOrNull { it.id == id } },
             moreMenuOpen = u.moreMenuOpen,
@@ -80,13 +80,6 @@ class HistoryViewModel(
             theme = theme,
             snackbar = u.snackbar,
         )
-    }
-
-    private fun summarize(list: List<HistoryEntry>): String {
-        val count = if (list.size == 1) "1 file" else "${list.size} files"
-        val sizes = list.mapNotNull { it.sizeBytes }
-        if (sizes.isEmpty()) return count
-        return "$count · ${formatSize(sizes.sum())}"
     }
 
     private fun sheetEntry(): HistoryEntry? =
@@ -120,7 +113,7 @@ class HistoryViewModel(
     fun onShare() {
         val e = sheetEntry()?.takeUnless { it.fileMissing } ?: return
         if (actions.shareFile(e.filePath) == ShareResult.PATH_COPIED) {
-            ui.update { it.copy(snackbar = "Path copied") }
+            ui.update { it.copy(snackbar = HistorySnackbar.PATH_COPIED) }
         }
     }
 
@@ -149,7 +142,7 @@ class HistoryViewModel(
                     history.remove(request.entry.id)
                     ui.update { it.copy(sheetId = null) }
                 } else {
-                    ui.update { it.copy(snackbar = "Couldn't delete file") }
+                    ui.update { it.copy(snackbar = HistorySnackbar.DELETE_FAILED) }
                 }
             }
         }

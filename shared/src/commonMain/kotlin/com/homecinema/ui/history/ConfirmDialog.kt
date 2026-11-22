@@ -25,13 +25,31 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.homecinema.ui.theme.AppShapes
 import com.homecinema.ui.theme.LocalAppColors
+import homecinema.shared.generated.resources.Res
+import homecinema.shared.generated.resources.action_cancel
+import homecinema.shared.generated.resources.confirm_clear_action
+import homecinema.shared.generated.resources.confirm_clear_body
+import homecinema.shared.generated.resources.confirm_clear_title
+import homecinema.shared.generated.resources.confirm_delete_action
+import homecinema.shared.generated.resources.confirm_delete_body
+import homecinema.shared.generated.resources.confirm_delete_title
+import org.jetbrains.compose.resources.stringResource
 
 private data class ConfirmCopy(val title: String, val body: String, val action: String)
 
+@Composable
 private fun copyFor(request: ConfirmRequest): ConfirmCopy =
     when (request) {
-        is ConfirmRequest.DeleteFile -> ConfirmCopy("Delete this file?", "It will be removed from your device.", "Delete")
-        ConfirmRequest.ClearHistory -> ConfirmCopy("Clear history?", "Your files stay on your device.", "Clear")
+        is ConfirmRequest.DeleteFile -> ConfirmCopy(
+            stringResource(Res.string.confirm_delete_title),
+            stringResource(Res.string.confirm_delete_body),
+            stringResource(Res.string.confirm_delete_action),
+        )
+        ConfirmRequest.ClearHistory -> ConfirmCopy(
+            stringResource(Res.string.confirm_clear_title),
+            stringResource(Res.string.confirm_clear_body),
+            stringResource(Res.string.confirm_clear_action),
+        )
     }
 
 /** Styled confirm dialog for destructive History actions: Cancel + the action in `error`. */
@@ -74,7 +92,7 @@ fun ConfirmCard(request: ConfirmRequest, onConfirm: () -> Unit, onDismiss: () ->
             )
         }
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            DialogButton("Cancel", colors.control, colors.textPrimary, onDismiss, Modifier.weight(1f))
+            DialogButton(stringResource(Res.string.action_cancel), colors.control, colors.textPrimary, onDismiss, Modifier.weight(1f))
             DialogButton(copy.action, colors.errorSoft, colors.error, onConfirm, Modifier.weight(1f))
         }
     }
