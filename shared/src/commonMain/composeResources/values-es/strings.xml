@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="history_title">Historial</string>
+    <string name="action_back">Atrás</string>
+    <string name="action_more">Más</string>
+    <string name="action_cancel">Cancelar</string>
+    <string name="action_paste">Pegar</string>
+    <string name="action_go">Ir</string>
+    <string name="action_download">Descargar</string>
+    <string name="action_try_again">Reintentar</string>
+    <string name="history_empty_title">Aún no hay descargas</string>
+    <string name="history_empty_body">Las descargas completadas aparecerán aquí.</string>
+    <string name="history_search_hint">Buscar descargas</string>
+    <string name="filter_all">Todo</string>
+    <string name="filter_video">Video</string>
+    <string name="filter_audio">Audio</string>
+    <string name="group_today">HOY</string>
+    <string name="group_yesterday">AYER</string>
+    <string name="group_last_week">ÚLTIMA SEMANA</string>
+    <string name="group_earlier">ANTERIORES</string>
+    <string name="stamp_today">Hoy, %1$s</string>
+    <string name="stamp_yesterday">Ayer, %1$s</string>
+    <string name="stamp_date">%1$d %2$s, %3$s</string>
+    <string name="snackbar_path_copied">Ruta copiada</string>
+    <string name="snackbar_delete_failed">No se pudo eliminar el archivo</string>
+    <string name="file_play">Reproducir</string>
+    <string name="file_share">Compartir</string>
+    <string name="file_show_in_folder">Mostrar en carpeta</string>
+    <string name="file_remove">Eliminar</string>
+    <string name="file_options">Opciones del archivo</string>
+    <string name="file_not_found">Archivo no encontrado · movido o eliminado</string>
+    <string name="file_not_found_short">archivo no encontrado</string>
+    <string name="menu_close">Cerrar menú</string>
+    <string name="menu_theme">Tema</string>
+    <string name="menu_open_folder">Abrir carpeta de descargas</string>
+    <string name="menu_clear_history">Borrar historial</string>
+    <string name="menu_selected">Seleccionado</string>
+    <string name="theme_system">Sistema</string>
+    <string name="theme_dark">Oscuro</string>
+    <string name="theme_light">Claro</string>
+    <string name="theme_ocean">Océano</string>
+    <string name="theme_volt">Volt</string>
+    <string name="confirm_delete_title">¿Eliminar este archivo?</string>
+    <string name="confirm_delete_body">Se borrará de tu dispositivo.</string>
+    <string name="confirm_delete_action">Eliminar</string>
+    <string name="confirm_clear_title">¿Borrar el historial?</string>
+    <string name="confirm_clear_body">Tus archivos se quedan en tu dispositivo.</string>
+    <string name="confirm_clear_action">Borrar</string>
+    <string name="home_paste_link">Pega un enlace</string>
+    <string name="home_works_with">Funciona con</string>
+    <string name="fetch_loading">Obteniendo información del video…</string>
+    <string name="fetch_blocked_title">Este sitio bloquea las descargas desde esta app</string>
+    <string name="fetch_blocked_body">Rechazó la conexión de la app, aunque es posible que el video se reproduzca en un navegador.</string>
+    <string name="fetch_failed_title">No se pudo obtener este video</string>
+    <string name="fetch_failed_body">Puede que el enlace sea privado, se haya eliminado o sea de un sitio que aún no admitimos.</string>
+    <string name="ffmpeg_hint">Instala ffmpeg para obtener mayor calidad</string>
+    <string name="downloads_section">Descargas</string>
+    <string name="downloads_in_progress">En curso</string>
+    <string name="downloads_empty_title">No hay descargas en curso</string>
+    <string name="downloads_empty_body">Pega un enlace arriba y tus descargas aparecerán aquí.</string>
+    <string name="url_hint">Pega el enlace de un video…</string>
+    <string name="url_clear">Borrar enlace</string>
+    <string name="step_copy_link">Copia el enlace</string>
+    <string name="step_paste">Pega</string>
+    <string name="step_download">Descarga</string>
+    <string name="format_video">MP4 · Video</string>
+    <string name="quality_best">Mejor</string>
+    <string name="card_pause">Pausar</string>
+    <string name="card_resume">Reanudar</string>
+    <string name="card_retry">Reintentar</string>
+    <string name="card_remove">Quitar</string>
+    <string name="meta_queued">En cola</string>
+    <string name="meta_paused">En pausa</string>
+    <string name="meta_failed">Error</string>
+    <string name="meta_starting">Iniciando…</string>
+    <string name="failure_blocked">Bloqueado por el sitio</string>
+    <string name="failure_connection">Se perdió la conexión</string>
+    <string name="failure_unavailable">No disponible</string>
+    <string name="failure_unsupported">Sitio no compatible</string>
+    <string name="failure_generic">Falló la descarga</string>
+    <string name="notif_channel_name">Descargas</string>
+    <string name="notif_downloading">Descargando %1$d</string>
+    <string name="notif_queued">%1$d en cola</string>
+    <string name="notif_paused">%1$d en pausa</string>
+    <string name="notif_idle">No hay descargas activas</string>
+    <plurals name="files_count">
+        <item quantity="one">%1$d archivo</item>
+        <item quantity="many">%1$d archivos</item>
+        <item quantity="other">%1$d archivos</item>
+    </plurals>
+    <string-array name="months_short">
+        <item>ene</item>
+        <item>feb</item>
+        <item>mar</item>
+        <item>abr</item>
+        <item>may</item>
+        <item>jun</item>
+        <item>jul</item>
+        <item>ago</item>
+        <item>sep</item>
+        <item>oct</item>
+        <item>nov</item>
+        <item>dic</item>
+    </string-array>
+</resources>

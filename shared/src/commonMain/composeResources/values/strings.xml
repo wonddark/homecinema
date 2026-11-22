@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="history_title">History</string>
+    <string name="action_back">Back</string>
+    <string name="action_more">More</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_paste">Paste</string>
+    <string name="action_go">Go</string>
+    <string name="action_download">Download</string>
+    <string name="action_try_again">Try again</string>
+    <string name="history_empty_title">No downloads yet</string>
+    <string name="history_empty_body">Finished downloads will appear here.</string>
+    <string name="history_search_hint">Search downloads</string>
+    <string name="filter_all">All</string>
+    <string name="filter_video">Video</string>
+    <string name="filter_audio">Audio</string>
+    <string name="group_today">TODAY</string>
+    <string name="group_yesterday">YESTERDAY</string>
+    <string name="group_last_week">LAST WEEK</string>
+    <string name="group_earlier">EARLIER</string>
+    <string name="stamp_today">Today, %1$s</string>
+    <string name="stamp_yesterday">Yesterday, %1$s</string>
+    <string name="stamp_date">%1$d %2$s, %3$s</string>
+    <string name="snackbar_path_copied">Path copied</string>
+    <string name="snackbar_delete_failed">Couldn't delete file</string>
+    <string name="file_play">Play</string>
+    <string name="file_share">Share</string>
+    <string name="file_show_in_folder">Show in folder</string>
+    <string name="file_remove">Remove</string>
+    <string name="file_options">File options</string>
+    <string name="file_not_found">File not found · moved or deleted</string>
+    <string name="file_not_found_short">file not found</string>
+    <string name="menu_close">Close menu</string>
+    <string name="menu_theme">Theme</string>
+    <string name="menu_open_folder">Open downloads folder</string>
+    <string name="menu_clear_history">Clear history</string>
+    <string name="menu_selected">Selected</string>
+    <string name="theme_system">System</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_ocean">Ocean</string>
+    <string name="theme_volt">Volt</string>
+    <string name="confirm_delete_title">Delete this file?</string>
+    <string name="confirm_delete_body">It will be removed from your device.</string>
+    <string name="confirm_delete_action">Delete</string>
+    <string name="confirm_clear_title">Clear history?</string>
+    <string name="confirm_clear_body">Your files stay on your device.</string>
+    <string name="confirm_clear_action">Clear</string>
+    <string name="home_paste_link">Paste a link</string>
+    <string name="home_works_with">Works with</string>
+    <string name="fetch_loading">Fetching video info…</string>
+    <string name="fetch_blocked_title">This site blocks downloads from this app</string>
+    <string name="fetch_blocked_body">It refused the app's connection, even though the video may still play in a browser.</string>
+    <string name="fetch_failed_title">Couldn't fetch this video</string>
+    <string name="fetch_failed_body">The link may be private, removed, or from a site we don't support yet.</string>
+    <string name="ffmpeg_hint">Install ffmpeg for higher qualities</string>
+    <string name="downloads_section">Downloads</string>
+    <string name="downloads_in_progress">In progress</string>
+    <string name="downloads_empty_title">Nothing downloading</string>
+    <string name="downloads_empty_body">Paste a link above and your downloads will show up here.</string>
+    <string name="url_hint">Paste a video link…</string>
+    <string name="url_clear">Clear link</string>
+    <string name="step_copy_link">Copy link</string>
+    <string name="step_paste">Paste</string>
+    <string name="step_download">Download</string>
+    <string name="format_video">MP4 · Video</string>
+    <string name="quality_best">Best</string>
+    <string name="card_pause">Pause</string>
+    <string name="card_resume">Resume</string>
+    <string name="card_retry">Retry</string>
+    <string name="card_remove">Remove</string>
+    <string name="meta_queued">Queued</string>
+    <string name="meta_paused">Paused</string>
+    <string name="meta_failed">Failed</string>
+    <string name="meta_starting">Starting…</string>
+    <string name="failure_blocked">Blocked by site</string>
+    <string name="failure_connection">Connection lost</string>
+    <string name="failure_unavailable">Unavailable</string>
+    <string name="failure_unsupported">Unsupported site</string>
+    <string name="failure_generic">Download failed</string>
+    <string name="notif_channel_name">Downloads</string>
+    <string name="notif_downloading">Downloading %1$d</string>
+    <string name="notif_queued">%1$d queued</string>
+    <string name="notif_paused">%1$d paused</string>
+    <string name="notif_idle">No active downloads</string>
+    <plurals name="files_count">
+        <item quantity="one">%1$d file</item>
+        <item quantity="other">%1$d files</item>
+    </plurals>
+    <string-array name="months_short">
+        <item>Jan</item>
+        <item>Feb</item>
+        <item>Mar</item>
+        <item>Apr</item>
+        <item>May</item>
+        <item>Jun</item>
+        <item>Jul</item>
+        <item>Aug</item>
+        <item>Sep</item>
+        <item>Oct</item>
+        <item>Nov</item>
+        <item>Dec</item>
+    </string-array>
+</resources>
