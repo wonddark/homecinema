@@ -34,7 +34,7 @@ compose.desktop {
     application {
         mainClass = "com.homecinema.desktop.MainKt"
 
-        javaHome = "/usr/lib64/jvm/java-21-openjdk-21"
+        // No hard-coded javaHome: run/package with the JDK Gradle itself runs on (JAVA_HOME, JDK 21).
 
         nativeDistributions {
             targetFormats(TargetFormat.Rpm)
