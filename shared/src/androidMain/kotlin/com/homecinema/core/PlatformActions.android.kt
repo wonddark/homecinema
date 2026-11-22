@@ -1,10 +1,12 @@
 package com.homecinema.core
 
+import android.Manifest
 import android.app.Activity
 import android.app.DownloadManager
 import android.content.ContentUris
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
@@ -19,7 +21,9 @@ import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -35,6 +39,12 @@ private val pendingDelete = AtomicReference<CompletableDeferred<Boolean>?>(null)
 /** The launcher of the composition currently on screen; replaced on every recreation. */
 private val currentLauncher = AtomicReference<ActivityResultLauncher<IntentSenderRequest>?>(null)
 
+/** The outstanding read-permission request (process-wide for the same reason as [pendingDelete]). */
+private val pendingPermission = AtomicReference<CompletableDeferred<Boolean>?>(null)
+
+/** The permission launcher of the composition currently on screen. */
+private val currentPermissionLauncher = AtomicReference<ActivityResultLauncher<Array<String>>?>(null)
+
 /**
  * Returns the process-wide Android [PlatformActions]. The instance is stable, so callers (e.g. an
  * app-level view-model surviving activity recreation) may hold it long-term: each composition
@@ -49,6 +59,14 @@ actual fun rememberPlatformActions(): PlatformActions {
     DisposableEffect(launcher) {
         currentLauncher.set(launcher)
         onDispose { currentLauncher.compareAndSet(launcher, null) }
+    }
+    val permissionLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { grants ->
+            pendingPermission.getAndSet(null)?.complete(grants.isNotEmpty() && grants.values.all { it })
+        }
+    DisposableEffect(permissionLauncher) {
+        currentPermissionLauncher.set(permissionLauncher)
+        onDispose { currentPermissionLauncher.compareAndSet(permissionLauncher, null) }
     }
     return AndroidPlatformActions
 }
@@ -100,12 +118,51 @@ private object AndroidPlatformActions : PlatformActions {
 
     override fun revealInFolder(path: String) = openFolder(File(path).parent ?: path)
 
+    /**
+     * Deletes directly when the app may; otherwise (API 30+, a file this app doesn't own, e.g. after a reinstall)
+     * MediaStore only shows the row once the app can read media, so that permission is asked for first.
+     */
     override suspend fun deleteFile(path: String): Boolean {
         val file = File(path)
-        val deleted = withContext(Dispatchers.IO) { runCatching { file.delete() }.getOrDefault(false) }
+        val deleted = withContext(Dispatchers.IO) {
+            try {
+                file.delete()
+            } catch (_: SecurityException) {
+                false
+            }
+        }
         if (deleted) return true
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return false
+        if (!ensureReadPermission(file)) return false
         return requestMediaStoreDelete(file)
+    }
+
+    /** True once the media-read permission for [file] is held, asking the user when it isn't yet. */
+    private suspend fun ensureReadPermission(file: File): Boolean {
+        val missing = readPermissionsFor(file).filter {
+            ContextCompat.checkSelfPermission(context, it) != PackageManager.PERMISSION_GRANTED
+        }
+        if (missing.isEmpty()) return true
+        val launcher = currentPermissionLauncher.get() ?: return false
+        val result = CompletableDeferred<Boolean>()
+        pendingPermission.getAndSet(result)?.complete(false)
+        return try {
+            withContext(Dispatchers.Main) { launcher.launch(missing.toTypedArray()) }
+            result.await()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: RuntimeException) {
+            false
+        } finally {
+            pendingPermission.compareAndSet(result, null)
+        }
+    }
+
+    /** API 33+ splits media reads by type; API 30-32 uses READ_EXTERNAL_STORAGE. */
+    private fun readPermissionsFor(file: File): List<String> {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return listOf(Manifest.permission.READ_EXTERNAL_STORAGE)
+        if (mimeOf(file).startsWith("audio/")) return listOf(Manifest.permission.READ_MEDIA_AUDIO)
+        return listOf(Manifest.permission.READ_MEDIA_VIDEO)
     }
 
     /** Asks the user to approve deleting a file this app doesn't own (scoped storage, API 30+). */
@@ -119,6 +176,9 @@ private object AndroidPlatformActions : PlatformActions {
             val launcher = currentLauncher.get() ?: return false
             withContext(Dispatchers.Main) { launcher.launch(IntentSenderRequest.Builder(sender).build()) }
             result.await()
+        } catch (e: CancellationException) {
+            // A CancellationException is a RuntimeException: rethrow it before the generic catch swallows it.
+            throw e
         } catch (_: RuntimeException) {
             false
         } finally {
@@ -129,6 +189,8 @@ private object AndroidPlatformActions : PlatformActions {
     @RequiresApi(Build.VERSION_CODES.R)
     private fun findMediaStoreUri(file: File): Uri? {
         val collections = listOf(
+            MediaStore.Video.Media.getContentUri(MediaStore.VOLUME_EXTERNAL),
+            MediaStore.Audio.Media.getContentUri(MediaStore.VOLUME_EXTERNAL),
             MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL),
             MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL),
         )
