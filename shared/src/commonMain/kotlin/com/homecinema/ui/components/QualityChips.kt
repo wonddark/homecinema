@@ -23,6 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.homecinema.core.format.QualityOption
+import com.homecinema.ui.text.qualityOptionLabel
 import com.homecinema.ui.theme.AppShapes
 import com.homecinema.ui.theme.LocalAppColors
 
@@ -46,7 +47,7 @@ fun QualityChips(
         options.forEach { option ->
             val widthModifier = if (fill) Modifier.weight(1f) else Modifier.width(ScrollingChipWidth)
             QualityChip(
-                label = option.label,
+                label = qualityOptionLabel(option),
                 selected = option == selected,
                 onClick = { onSelect(option) },
                 modifier = widthModifier,

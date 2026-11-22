@@ -24,8 +24,11 @@ import androidx.compose.ui.unit.sp
 import com.homecinema.domain.MediaKind
 import com.homecinema.ui.theme.AppShapes
 import com.homecinema.ui.theme.LocalAppColors
+import homecinema.shared.generated.resources.Res
+import homecinema.shared.generated.resources.format_video
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * Segmented `MP4 · Video` / `<EXT> · Audio` toggle. The video segment appears only when
@@ -49,7 +52,7 @@ fun FormatToggle(
     ) {
         if (videoAvailable) {
             Segment(
-                label = "MP4 · Video",
+                label = stringResource(Res.string.format_video),
                 icon = AppIcons.Video,
                 selected = selected == MediaKind.VIDEO,
                 onClick = { onSelect(MediaKind.VIDEO) },

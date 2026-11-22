@@ -30,7 +30,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.homecinema.ui.theme.AppShapes
 import com.homecinema.ui.theme.LocalAppColors
+import homecinema.shared.generated.resources.Res
+import homecinema.shared.generated.resources.action_paste
+import homecinema.shared.generated.resources.url_clear
+import homecinema.shared.generated.resources.url_hint
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 
 /** Visual emphasis of the URL field: neutral, accent while fetching/ready, error after a failed fetch. */
 enum class UrlInputStatus { Idle, Active, Error }
@@ -91,7 +96,7 @@ fun UrlInput(
                 Box(contentAlignment = Alignment.CenterStart) {
                     if (value.isEmpty()) {
                         Text(
-                            text = "Paste a video link…",
+                            text = stringResource(Res.string.url_hint),
                             style = textStyle,
                             color = colors.textTertiary,
                             maxLines = 1,
@@ -109,7 +114,7 @@ fun UrlInput(
                 icon = AppIcons.X,
                 tint = colors.textSecondary,
                 onClick = onClear,
-                contentDescription = "Clear link",
+                contentDescription = stringResource(Res.string.url_clear),
                 size = 32.dp,
                 iconSize = 14.dp,
             )
@@ -128,7 +133,7 @@ private fun PasteButton(onClick: () -> Unit) {
             .padding(horizontal = 12.dp, vertical = 8.dp),
     ) {
         Text(
-            text = "Paste",
+            text = stringResource(Res.string.action_paste),
             color = colors.onAccent,
             style = MaterialTheme.typography.labelLarge,
             fontSize = 13.sp,

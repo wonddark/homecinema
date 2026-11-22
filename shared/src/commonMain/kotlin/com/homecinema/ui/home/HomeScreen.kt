@@ -59,8 +59,25 @@ import com.homecinema.ui.components.UrlInputStatus
 import com.homecinema.ui.components.Wordmark
 import com.homecinema.ui.theme.AppShapes
 import com.homecinema.ui.theme.LocalAppColors
+import homecinema.shared.generated.resources.Res
+import homecinema.shared.generated.resources.action_download
+import homecinema.shared.generated.resources.action_try_again
+import homecinema.shared.generated.resources.downloads_empty_body
+import homecinema.shared.generated.resources.downloads_empty_title
+import homecinema.shared.generated.resources.downloads_in_progress
+import homecinema.shared.generated.resources.downloads_section
+import homecinema.shared.generated.resources.fetch_blocked_body
+import homecinema.shared.generated.resources.fetch_blocked_title
+import homecinema.shared.generated.resources.fetch_failed_body
+import homecinema.shared.generated.resources.fetch_failed_title
+import homecinema.shared.generated.resources.fetch_loading
+import homecinema.shared.generated.resources.ffmpeg_hint
+import homecinema.shared.generated.resources.history_title
+import homecinema.shared.generated.resources.home_paste_link
+import homecinema.shared.generated.resources.home_works_with
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 
 /** The [HomeViewModel] actions the Home screen can trigger. */
 @Immutable
@@ -128,7 +145,11 @@ private fun Header(onOpenHistory: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Wordmark()
-        PillButton(label = "History", onClick = onOpenHistory, trailingIcon = AppIcons.ArrowRight)
+        PillButton(
+            label = stringResource(Res.string.history_title),
+            onClick = onOpenHistory,
+            trailingIcon = AppIcons.ArrowRight,
+        )
     }
 }
 
@@ -141,7 +162,7 @@ private fun DownloadCard(state: HomeState, actions: HomeActions) {
             modifier = Modifier.padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            SectionLabel("Paste a link")
+            SectionLabel(stringResource(Res.string.home_paste_link))
             UrlInput(
                 value = state.input,
                 status = inputStatus(fetch),
@@ -185,7 +206,7 @@ private fun PlatformsRow() {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text = "Works with",
+            text = stringResource(Res.string.home_works_with),
             color = colors.textMuted,
             style = MaterialTheme.typography.labelMedium,
             fontSize = 12.sp,
@@ -238,7 +259,7 @@ private fun FetchingContent() {
     ) {
         Spinner()
         Text(
-            text = "Fetching video info…",
+            text = stringResource(Res.string.fetch_loading),
             color = colors.textSecondary,
             style = MaterialTheme.typography.bodySmall,
             fontSize = 12.sp,
@@ -264,14 +285,13 @@ private fun Spinner() {
 }
 
 /** Title and detail lines for a failed fetch. */
+@Composable
 private fun failedText(reason: FetchFailure): Pair<String, String> =
     when (reason) {
         FetchFailure.SiteBlocked ->
-            "This site blocks downloads from this app" to
-                "It refused the app's connection, even though the video may still play in a browser."
+            stringResource(Res.string.fetch_blocked_title) to stringResource(Res.string.fetch_blocked_body)
         FetchFailure.Generic ->
-            "Couldn't fetch this video" to
-                "The link may be private, removed, or from a site we don't support yet."
+            stringResource(Res.string.fetch_failed_title) to stringResource(Res.string.fetch_failed_body)
     }
 
 @Composable
@@ -330,7 +350,7 @@ private fun FailedContent(
             modifier = Modifier.size(16.dp),
         )
         Text(
-            text = "Try again",
+            text = stringResource(Res.string.action_try_again),
             color = colors.accent,
             style = MaterialTheme.typography.labelLarge,
             fontSize = 15.sp,
@@ -420,7 +440,7 @@ private fun FfmpegHint() {
             modifier = Modifier.size(14.dp),
         )
         Text(
-            text = "Install ffmpeg for higher qualities",
+            text = stringResource(Res.string.ffmpeg_hint),
             color = colors.textSecondary,
             style = MaterialTheme.typography.bodySmall,
             fontSize = 12.sp,
@@ -448,7 +468,7 @@ private fun DownloadButton(onDownload: () -> Unit) {
             modifier = Modifier.size(20.dp),
         )
         Text(
-            text = "Download",
+            text = stringResource(Res.string.action_download),
             color = colors.onAccent,
             style = MaterialTheme.typography.titleMedium,
             fontSize = 16.sp,
@@ -463,7 +483,7 @@ private fun DownloadsSection(tasks: List<DownloadTask>, actions: HomeActions) {
     val highlightedId = active.firstOrNull { it.state == DownloadState.DOWNLOADING }?.id
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
-            text = if (active.isEmpty()) "Downloads" else "In progress",
+            text = if (active.isEmpty()) stringResource(Res.string.downloads_section) else stringResource(Res.string.downloads_in_progress),
             color = LocalAppColors.current.textPrimary,
             style = MaterialTheme.typography.titleMedium,
             fontSize = 18.sp,
@@ -471,8 +491,8 @@ private fun DownloadsSection(tasks: List<DownloadTask>, actions: HomeActions) {
         )
         if (active.isEmpty()) {
             EmptyState(
-                title = "Nothing downloading",
-                body = "Paste a link above and your downloads will show up here.",
+                title = stringResource(Res.string.downloads_empty_title),
+                body = stringResource(Res.string.downloads_empty_body),
                 showSteps = true,
             )
         }

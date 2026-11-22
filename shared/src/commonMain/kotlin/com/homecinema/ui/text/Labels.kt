@@ -2,6 +2,7 @@ package com.homecinema.ui.text
 
 import androidx.compose.runtime.Composable
 import com.homecinema.core.downloader.FailureReason
+import com.homecinema.core.format.QualityOption
 import com.homecinema.domain.DownloadTask
 import homecinema.shared.generated.resources.Res
 import homecinema.shared.generated.resources.failure_blocked
@@ -39,6 +40,7 @@ import homecinema.shared.generated.resources.filter_video
 import homecinema.shared.generated.resources.filter_audio
 import homecinema.shared.generated.resources.files_count
 import homecinema.shared.generated.resources.months_short
+import homecinema.shared.generated.resources.quality_best
 import org.jetbrains.compose.resources.pluralStringResource
 import org.jetbrains.compose.resources.stringArrayResource
 import org.jetbrains.compose.resources.stringResource
@@ -127,3 +129,8 @@ fun filterLabel(filter: HistoryFilter): String = stringResource(
         HistoryFilter.AUDIO -> Res.string.filter_audio
     },
 )
+
+/** "Best" is a localized placeholder; concrete qualities (1080p, 4K) are language-neutral data. */
+@Composable
+fun qualityOptionLabel(option: QualityOption): String =
+    if (option.formatId == "best") stringResource(Res.string.quality_best) else option.label

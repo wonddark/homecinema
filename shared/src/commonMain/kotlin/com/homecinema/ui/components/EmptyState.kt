@@ -24,8 +24,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.homecinema.ui.theme.AppShapes
 import com.homecinema.ui.theme.LocalAppColors
+import homecinema.shared.generated.resources.Res
+import homecinema.shared.generated.resources.step_copy_link
+import homecinema.shared.generated.resources.step_download
+import homecinema.shared.generated.resources.step_paste
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 
 private val EmptyShape = RoundedCornerShape(20.dp)
 
@@ -92,11 +97,11 @@ private fun Steps() {
         horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        StepPill(AppIcons.Copy, "Copy link")
+        StepPill(AppIcons.Copy, stringResource(Res.string.step_copy_link))
         StepChevron(colors.textTertiary)
-        StepPill(AppIcons.Clipboard, "Paste")
+        StepPill(AppIcons.Clipboard, stringResource(Res.string.step_paste))
         StepChevron(colors.textTertiary)
-        StepPill(AppIcons.Download, "Download")
+        StepPill(AppIcons.Download, stringResource(Res.string.step_download))
     }
 }
 
