@@ -40,6 +40,8 @@ kotlin {
             implementation(compose.components.resources)
             // api: KtorThumbnailSaver's public constructor takes an HttpClient.
             api(libs.ktor.client.core)
+            implementation(libs.coil.compose)
+            implementation(libs.coil.network.ktor3)
         }
 
         commonTest.dependencies {
@@ -58,6 +60,7 @@ kotlin {
         val desktopMain by getting {
             dependencies {
                 implementation(compose.desktop.currentOs)
+                implementation(compose.components.uiToolingPreview)
                 implementation(libs.ktor.client.java)
             }
         }
