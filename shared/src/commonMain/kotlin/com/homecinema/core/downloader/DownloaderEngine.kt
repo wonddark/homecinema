@@ -20,6 +20,9 @@ interface DownloaderEngine {
 
     /** Kills the process and deletes the task's partial files. */
     suspend fun cancel(taskId: String)
+
+    /** Kills every running download process (keeping .part files) before the app exits. Blocking, best effort. */
+    fun shutdown()
 }
 
 expect fun createDownloaderEngine(): DownloaderEngine

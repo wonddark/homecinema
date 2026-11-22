@@ -50,6 +50,7 @@ private class ScriptedEngine(private val handler: suspend (String) -> VideoInfo)
     private val delegate = MockDownloaderEngine()
     var calls = 0
     override val ffmpegAvailable = true
+    override fun shutdown() = delegate.shutdown()
 
     override suspend fun extractInfo(url: String): VideoInfo {
         calls++

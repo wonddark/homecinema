@@ -17,6 +17,8 @@ class MockDownloaderEngine : DownloaderEngine {
     val downloadCalls = mutableListOf<DownloadTask>()
     val pausedIds = mutableListOf<String>()
     val cancelledIds = mutableListOf<String>()
+    var shutdownCalls = 0
+    var onShutdown: () -> Unit = {}
 
     override suspend fun extractInfo(url: String): VideoInfo =
         VideoInfo(
@@ -49,6 +51,11 @@ class MockDownloaderEngine : DownloaderEngine {
     override suspend fun pause(taskId: String) {
         pausedIds += taskId
         gates[taskId]?.completeExceptionally(RuntimeException("process killed"))
+    }
+
+    override fun shutdown() {
+        shutdownCalls++
+        onShutdown()
     }
 
     override suspend fun cancel(taskId: String) {

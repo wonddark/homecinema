@@ -18,6 +18,8 @@ class DownloaderEngineAndroid : DownloaderEngine {
 
     private val tasks = ConcurrentHashMap<String, DownloadTask>()
     private val outputDirs = ConcurrentHashMap<String, String>()
+    /** Run token per running download; a resumed download replaces it, so a stale finally cannot drop it. */
+    private val activeRuns = ConcurrentHashMap<String, Any>()
 
     override suspend fun extractInfo(url: String): VideoInfo =
         withContext(Dispatchers.IO) {
@@ -53,6 +55,8 @@ class DownloaderEngineAndroid : DownloaderEngine {
                         }
                     }
                 }
+            val run = Any()
+            activeRuns[task.id] = run
             try {
                 val response =
                     YoutubeDL.getInstance().execute(request, task.id) { progress, _, _ ->
@@ -61,6 +65,8 @@ class DownloaderEngineAndroid : DownloaderEngine {
                 parseFinalPath(response.out.lineSequence())
             } catch (e: Exception) {
                 throw RuntimeException(lastErrorLine(e.message.orEmpty()), e)
+            } finally {
+                activeRuns.remove(task.id, run)
             }
         }
 
@@ -69,6 +75,13 @@ class DownloaderEngineAndroid : DownloaderEngine {
             YoutubeDL.getInstance().destroyProcessById(taskId)
             Unit
         }
+
+    /** Best effort: kills the yt-dlp process of every download still running. */
+    override fun shutdown() {
+        activeRuns.keys.toList().forEach { id ->
+            runCatching { YoutubeDL.getInstance().destroyProcessById(id) }
+        }
+    }
 
     override suspend fun cancel(taskId: String): Unit =
         withContext(Dispatchers.IO) {

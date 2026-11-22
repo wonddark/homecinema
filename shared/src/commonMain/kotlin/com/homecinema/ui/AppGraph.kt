@@ -62,9 +62,11 @@ class AppGraph(
         queue.restore()
     }
 
+    /** Kills running downloads first (their blocking reads ignore cancellation), then cancels, then frees the client. */
     fun close() {
-        httpClient.close()
+        engine.shutdown()
         scope.cancel()
+        httpClient.close()
     }
 
     @OptIn(ExperimentalUuidApi::class)

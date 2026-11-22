@@ -6,6 +6,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeUnit
 
 actual fun createDownloaderEngine(): DownloaderEngine = DownloaderEngineDesktop()
 
@@ -17,6 +18,11 @@ class DownloaderEngineDesktop : DownloaderEngine {
     private val activeProcesses = ConcurrentHashMap<String, Process>()
     private val tasks = ConcurrentHashMap<String, DownloadTask>()
     private val outputDirs = ConcurrentHashMap<String, String>()
+
+    init {
+        // Safety net: the JVM does not kill child processes, so an exit path that skips shutdown() would orphan yt-dlp.
+        Runtime.getRuntime().addShutdownHook(Thread(::shutdown, "yt-dlp-shutdown"))
+    }
 
     override val ffmpegAvailable: Boolean by lazy {
         try {
@@ -84,6 +90,15 @@ class DownloaderEngineDesktop : DownloaderEngine {
             activeProcesses.remove(taskId)?.destroy()
             Unit
         }
+
+    /** Asks every yt-dlp to stop, gives each up to 2 s, then force-kills survivors. Idempotent. */
+    override fun shutdown() {
+        val processes = activeProcesses.values.toList()
+        processes.forEach { it.destroy() }
+        processes.forEach { process ->
+            if (!process.waitFor(2, TimeUnit.SECONDS)) process.destroyForcibly()
+        }
+    }
 
     override suspend fun cancel(taskId: String): Unit =
         withContext(Dispatchers.IO) {
