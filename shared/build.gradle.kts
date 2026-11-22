@@ -71,9 +71,9 @@ kotlin {
 
 // Opt-in desktopTest checks (each is skipped unless its property is passed):
 // -PhistoryRenderDir=<dir> / -PhomeRenderDir=<dir> / -PthemeRenderDir=<dir> write render PNGs;
-// -Pe2e=true runs DesktopE2ETest against the real yt-dlp, ffmpeg and network.
+// -Pe2e=true runs DesktopE2ETest against the real yt-dlp, ffmpeg and network (-Pe2eDir=<dir> picks its folder).
 tasks.withType<Test>().configureEach {
-    listOf("historyRenderDir", "homeRenderDir", "themeRenderDir", "e2e").forEach { name ->
+    listOf("historyRenderDir", "homeRenderDir", "themeRenderDir", "e2e", "e2eDir").forEach { name ->
         providers.gradleProperty(name).orNull?.let { systemProperty(name, it) }
     }
 }

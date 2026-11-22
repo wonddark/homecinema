@@ -45,7 +45,7 @@ import kotlin.time.Duration.Companion.seconds
 
 /**
  * End-to-end check of the desktop download path against the real yt-dlp, ffmpeg and network.
- * Opt-in: runs only with `-Pe2e=true`. Storage and download folders live under [ROOT] (never ~/Downloads).
+ * Opt-in: runs only with `-Pe2e=true`. Storage and download folders live under [ROOT] (never ~/Downloads); `-Pe2eDir=<dir>` moves it.
  */
 class DesktopE2ETest {
     private val enabled = System.getProperty("e2e") == "true"
@@ -280,7 +280,9 @@ class DesktopE2ETest {
     private fun log(line: String) = println("[E2E] $line")
 
     private companion object {
-        const val ROOT = "/tmp/claude-1000/-home-oz-Projects-Personal-homecinema/abc4f7ab-0f48-43fe-b403-964668d658ec/scratchpad/e2e"
+        /** `-Pe2eDir=<dir>` overrides the default `<java.io.tmpdir>/grabthatvideo-e2e`. */
+        val ROOT: String =
+            System.getProperty("e2eDir") ?: (System.getProperty("java.io.tmpdir") + "/grabthatvideo-e2e")
         const val ZOO = "https://www.youtube.com/watch?v=jNQXAC9IVRw"
         const val ZOO_ID = "jNQXAC9IVRw"
         const val BUNNY = "https://www.youtube.com/watch?v=aqz-KE-bpKQ"
