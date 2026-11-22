@@ -55,6 +55,7 @@ kotlin {
             implementation(libs.youtubedl.android)
             implementation(libs.youtubedl.android.ffmpeg)
             implementation(libs.androidx.core.ktx)
+            implementation(libs.androidx.activity.compose)
             implementation(libs.ktor.client.okhttp)
         }
 
@@ -66,6 +67,11 @@ kotlin {
             }
         }
     }
+}
+
+// Pass -PhistoryRenderDir=<dir> to have HistoryRenderCheck write its PNGs (it is skipped otherwise).
+tasks.withType<Test>().configureEach {
+    providers.gradleProperty("historyRenderDir").orNull?.let { systemProperty("historyRenderDir", it) }
 }
 
 android {

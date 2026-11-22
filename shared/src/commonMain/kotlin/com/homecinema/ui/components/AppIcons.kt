@@ -36,6 +36,7 @@ object AppIcons {
     val FolderOpen: DrawableResource = Res.drawable.lucide_folder_open
     val Trash2: DrawableResource = Res.drawable.lucide_trash_2
     val Palette: DrawableResource = Res.drawable.lucide_palette
+    val Check: DrawableResource = Res.drawable.lucide_check
     /** Pencil's "alert" icon, mapped to Lucide `file-x`. */
     val Alert: DrawableResource = Res.drawable.lucide_file_x
 }

@@ -18,21 +18,23 @@ import androidx.compose.ui.unit.sp
 import com.homecinema.ui.theme.LocalAppColors
 import org.jetbrains.compose.resources.painterResource
 
-/** Hook logo mark followed by "GrabThat" + accent "Video". */
+/** Hook logo mark followed by "GrabThat" + accent "Video"; [showMark] = false drops the mark (History header). */
 @Composable
-fun Wordmark(modifier: Modifier = Modifier) {
+fun Wordmark(modifier: Modifier = Modifier, showMark: Boolean = true) {
     val colors = LocalAppColors.current
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(
-            painter = painterResource(AppIcons.Hook),
-            contentDescription = null,
-            tint = colors.accent,
-            modifier = Modifier.size(30.dp),
-        )
+        if (showMark) {
+            Icon(
+                painter = painterResource(AppIcons.Hook),
+                contentDescription = null,
+                tint = colors.accent,
+                modifier = Modifier.size(30.dp),
+            )
+        }
         Text(
             text = buildAnnotatedString {
                 withStyle(SpanStyle(color = colors.textPrimary)) { append("GrabThat") }
