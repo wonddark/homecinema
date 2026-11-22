@@ -19,8 +19,10 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
 import kotlinx.serialization.builtins.ListSerializer
+import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -63,7 +65,7 @@ class HistoryViewModelTest {
         entries.reversed().forEach { r.add(it) }
         val a = FakeActions()
         val s = settings()
-        val vm = HistoryViewModel(r, s, a, "/dl", backgroundScope, { now }, zone)
+        val vm = HistoryViewModel(r, s, a, "/dl", backgroundScope, { now }, zone, refreshContext = EmptyCoroutineContext)
         runCurrent()
         return Ctx(vm, r, a, s)
     }
@@ -175,5 +177,16 @@ class HistoryViewModelTest {
         assertTrue(!c.vm.state.value.moreMenuOpen)
         c.vm.onOpenDownloadsFolder()
         assertEquals(listOf("folder:/dl"), c.actions.calls)
+    }
+    @Test
+    fun `opening history re-checks missing files`() = runTest {
+        val c = ctx(entry("1", "a"))
+        assertFalse(c.vm.state.value.groups.single().second.single().fileMissing)
+        io.delete("/dl/1")
+        c.vm.onShown(); runCurrent()
+        assertTrue(c.vm.state.value.groups.single().second.single().fileMissing)
+        io.write("/dl/1", "x")
+        c.vm.onShown(); runCurrent()
+        assertFalse(c.vm.state.value.groups.single().second.single().fileMissing)
     }
 }

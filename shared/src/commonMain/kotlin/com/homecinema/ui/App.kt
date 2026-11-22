@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -73,6 +74,7 @@ fun App(graph: AppGraph) {
                         }
                         Screen.HISTORY -> {
                             val historyState by historyVm.state.collectAsState()
+                            LaunchedEffect(historyVm) { historyVm.onShown() }
                             val goHome = { screen = Screen.HOME }
                             PlatformBackHandler(enabled = true) { historyBack(historyState, historyActions, goHome) }
                             HistoryScreen(historyState, historyActions, onBack = goHome)

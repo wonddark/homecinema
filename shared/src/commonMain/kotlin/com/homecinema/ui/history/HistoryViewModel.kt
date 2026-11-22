@@ -11,6 +11,7 @@ import com.homecinema.domain.HistoryEntry
 import com.homecinema.domain.MediaKind
 import com.homecinema.ui.components.formatSize
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -19,6 +20,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
+import kotlin.coroutines.CoroutineContext
 
 class HistoryViewModel(
     private val history: HistoryRepository,
@@ -28,6 +30,7 @@ class HistoryViewModel(
     private val scope: CoroutineScope,
     private val clock: () -> Long,
     private val zone: TimeZone,
+    private val refreshContext: CoroutineContext = Dispatchers.Default,
 ) {
     private data class Ui(
         val query: String = "",
@@ -46,7 +49,7 @@ class HistoryViewModel(
         }.stateIn(scope, SharingStarted.Eagerly, build(history.entries.value, settings.settings.value.theme, ui.value))
 
     init {
-        history.refreshMissing()
+        refreshMissing()
     }
 
     private fun build(entries: List<HistoryEntry>, theme: ThemePreference, u: Ui): HistoryState {
@@ -88,6 +91,14 @@ class HistoryViewModel(
 
     private fun sheetEntry(): HistoryEntry? =
         ui.value.sheetId?.let { id -> history.entries.value.firstOrNull { it.id == id } }
+
+    /** Call each time History comes on screen: files may have been moved or deleted since the last check. */
+    fun onShown() = refreshMissing()
+
+    /** Stats every file, so it runs on [refreshContext] (a background dispatcher by default), not the caller's thread. */
+    private fun refreshMissing() {
+        scope.launch(refreshContext) { history.refreshMissing() }
+    }
 
     fun onQuery(q: String) = ui.update { it.copy(query = q) }
 
