@@ -19,11 +19,12 @@ class HomeCinemaApp : Application() {
         FFmpeg.getInstance().init(this)
         GlobalScope.launch(Dispatchers.IO) {
             try {
-                YoutubeDL.getInstance().updateYoutubeDL(this@HomeCinemaApp)
-                Log.i("HomeCinemaApp", "yt-dlp updated successfully")
+                val status = YoutubeDL.getInstance().updateYoutubeDL(this@HomeCinemaApp)
+                Log.i("HomeCinemaApp", "yt-dlp update: $status")
             } catch (e: Exception) {
                 Log.w("HomeCinemaApp", "yt-dlp update failed: ${e.message}")
             }
+            Log.i("HomeCinemaApp", "yt-dlp version: ${YoutubeDL.getInstance().versionName(this@HomeCinemaApp)}")
         }
     }
 }
