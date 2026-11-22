@@ -1,7 +1,7 @@
 # GrabThatVideo Redesign — Design Spec
 
 **Date:** 2026-11-21
-**Status:** Draft (awaiting approval)
+**Status:** Approved
 **Design source:** Pencil canvas `untitled.pen` (32 frames: 8 screens × 4 color schemes)
 
 ## Intent
@@ -59,7 +59,7 @@ Rebuild the HomeCinema app UI to match the new "GrabThatVideo" design, with ever
 - Sizes used: 9, 10, 11, 12, 13, 14, 15, 16, 18, 20. Section labels (`PASTE A LINK`, `TODAY`) are 11/600 uppercase with letter spacing.
 
 ### Icons
-- **Lucide** icons, bundled as vector drawables in `composeResources/drawable` (only the ones used): `hook` (logo), `arrow-right`, `link-2`, `x`, `youtube`, `instagram`, `twitter`, `facebook`, `globe`, `video`, `music`, `arrow-down-to-line`, `inbox`, `copy`, `clipboard`, `download`, `chevron-right`, `chevron-left`, `loader-circle`, `circle-alert`, `rotate-ccw`, `pause`, `play`, `ellipsis`, `ellipsis-vertical`, `search`, `audio-lines`, `share-2`, `folder-open`, `trash-2`, `palette` (theme entry, see below). Unused existing drawables are removed.
+- **Lucide** icons, bundled as vector drawables in `composeResources/drawable` (only the ones used): `hook` (logo), `arrow-right`, `link-2`, `x`, `youtube`, `instagram`, `twitter`, `facebook`, `globe`, `video`, `music`, `arrow-down-to-line`, `inbox`, `copy`, `clipboard`, `download`, `chevron-right`, `chevron-left`, `loader-circle`, `circle-alert`, `rotate-ccw`, `pause`, `play`, `ellipsis`, `ellipsis-vertical`, `search`, `audio-lines`, `share-2`, `folder-open`, `trash-2`, `palette` (theme entry, see below), `alert`. Unused existing drawables are removed.
 
 ### Color tokens
 
@@ -92,6 +92,7 @@ Each scheme is one `AppColors` instance. Token names are mine; values are taken 
 | `accentBorder` (active item, 40%) | accent @40% | … | … | … |
 | `audioThumbBg` | #1F1512 | #FFEAE3 | #0E2440 | #1E2410 |
 | `error` | #FF4D4F | #E5383B | #FF5C6C | #FF5B4A |
+| `warning` (missing file) | #F5A524 | #C77D0A | #F5A524 | #F5A524 |
 | `errorSoft` (14%) / `errorBorder` (30%) | derived | derived | derived | derived |
 | `scrim` (sheet) | #000000A6 | #00000059 | #000000A6 | #000000A6 |
 | `scrimMenu` | #00000080 | #00000040 | #00000080 | #00000080 |
@@ -139,6 +140,8 @@ Background = `background` fill + the two radial glows layered on top (sizes 1.5�
 
 **Groups:** `TODAY`, `YESTERDAY`, `LAST WEEK` (2–7 days ago), `EARLIER` (older). Newest first. Each row: thumbnail 72×48 with duration badge (video) or `audioThumbBg` tile with `audio-lines` icon (audio); title (max 2 lines); meta `"<EXT> · <quality or bitrate> · <size>"` (video `MP4 · 1080p · 248 MB`, audio `M4A · 128 kbps · 9.4 MB`); **⋮** button opens the File menu. Tapping a row = **Play**.
 
+**Missing file row** (designed in the Volt History frame, "Street food tour in Tokyo"): thumbnail at 35% opacity, title in `textSecondary`, meta replaced by `alert` icon (13) + "File not found · moved or deleted" in `warning` (12/400). In its File menu, Play / Share / Show in folder are disabled (my call); Remove only removes the History entry and thumbnail (nothing to delete). Tapping the row opens the File menu instead of playing.
+
 **History empty state:** (my call — not designed) reuse the Home empty-state card with title "No downloads yet" and body "Finished downloads will appear here."
 
 **File menu (bottom sheet):** grabber, file header (thumb, title, `meta · <Today, 18:42>`), actions:
@@ -178,7 +181,7 @@ Scrim tap or swipe down closes.
 
 ### Queue (`DownloadQueueManager`)
 - Use the task's selected format (remove the hardcoded `"best"`).
-- Up to **2 concurrent** downloads (my call — the design shows two active at once); others stay `QUEUED`.
+- Up to **4 concurrent** downloads; others stay `QUEUED`.
 - Actions: `pause`, `resume` (→ QUEUED → runs with `--continue`), `retry` (same as resume, clears `errorReason`), `remove` (cancel + delete partial file).
 - On completion: hand the task to `DownloadHistory` and remove it from the queue.
 - Failure reason: a short human-readable string mapped from the yt-dlp error ("Connection lost", "Unavailable", "Unsupported site", else "Download failed").
@@ -187,7 +190,7 @@ Scrim tap or swipe down closes.
 - `DownloadHistory` becomes a `StateFlow`-backed repository that loads/saves `history.json` on every change (debounced). Cap removed (my call; the history is the user's library).
 - `ThemePreference` (System/Dark/Light/Ocean/Volt) saved in `settings.json`.
 - Storage location (expect/actual): Android `context.filesDir`, Desktop `~/.grabthatvideo/`.
-- Entries whose file no longer exists on disk are dropped at load time (my call).
+- Entries whose file no longer exists on disk are **kept** and flagged `fileMissing` (checked at load and when History opens).
 
 ### Download directory
 - Android: unchanged (public Downloads).
