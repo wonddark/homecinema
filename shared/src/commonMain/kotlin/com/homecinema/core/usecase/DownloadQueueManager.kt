@@ -40,13 +40,13 @@ class DownloadQueueManager(
     private val scope: CoroutineScope,
     private val clock: () -> Long,
     private val maxConcurrent: Int = 4,
-) {
+) : DownloadQueue {
     private val mutex = Mutex()
     private val activeRuns = mutableMapOf<String, Any>()
     private val _tasks = MutableStateFlow<List<DownloadTask>>(emptyList())
 
     /** Non-completed tasks in insertion order. */
-    val tasks: StateFlow<List<DownloadTask>> = _tasks.asStateFlow()
+    override val tasks: StateFlow<List<DownloadTask>> = _tasks.asStateFlow()
 
     /** Loads queue.json, turns DOWNLOADING into PAUSED, deletes our own orphan partial files, then starts queued tasks. */
     fun restore() =
@@ -61,7 +61,7 @@ class DownloadQueueManager(
             pump()
         }
 
-    fun enqueue(task: DownloadTask) =
+    override fun enqueue(task: DownloadTask) =
         locked {
             if (_tasks.value.none { it.id == task.id }) {
                 _tasks.value += task.copy(state = DownloadState.QUEUED, addedAt = clock())
@@ -70,7 +70,7 @@ class DownloadQueueManager(
             }
         }
 
-    fun pause(id: String) =
+    override fun pause(id: String) =
         locked {
             val task = find(id) ?: return@locked
             if (task.state != DownloadState.DOWNLOADING && task.state != DownloadState.QUEUED) return@locked
@@ -80,11 +80,11 @@ class DownloadQueueManager(
             pump()
         }
 
-    fun resume(id: String) = requeue(id, DownloadState.PAUSED)
+    override fun resume(id: String) = requeue(id, DownloadState.PAUSED)
 
-    fun retry(id: String) = requeue(id, DownloadState.FAILED)
+    override fun retry(id: String) = requeue(id, DownloadState.FAILED)
 
-    fun remove(id: String) =
+    override fun remove(id: String) =
         locked {
             if (find(id) == null) return@locked
             activeRuns.remove(id)
