@@ -12,7 +12,7 @@
 
     <application
         android:name=".HomeCinemaApp"
-        android:label="HomeCinema"
+        android:label="GrabThatVideo"
         android:theme="@android:style/Theme.Material.NoActionBar"
         >
         <activity

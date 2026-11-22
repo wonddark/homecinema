@@ -7,69 +7,29 @@ import android.content.Intent
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
-import com.homecinema.core.appStorageDir
-import com.homecinema.core.downloader.DownloaderEngine
-import com.homecinema.core.downloader.createDownloaderEngine
-import com.homecinema.core.history.HistoryRepository
-import com.homecinema.core.platformDownloadDir
-import com.homecinema.core.platformFileIO
-import com.homecinema.core.storage.JsonFileStore
-import com.homecinema.core.usecase.DownloadQueueManager
-import com.homecinema.core.usecase.KtorThumbnailSaver
 import com.homecinema.domain.DownloadState
 import com.homecinema.domain.DownloadTask
-import com.homecinema.domain.HistoryEntry
-import io.ktor.client.HttpClient
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
+import com.homecinema.ui.AppGraph
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import kotlinx.serialization.builtins.ListSerializer
 
+/** Foreground service that owns the [AppGraph] (and so the download queue) for the process lifetime. */
 class DownloadService : Service() {
-
-    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     override fun onCreate() {
         super.onCreate()
-        engine = createDownloaderEngine()
-        queueManager = createQueueManager(engine!!).also { it.restore() }
+        val graph = AppGraphHolder.getOrCreate()
 
         createNotificationChannel()
-        startForeground(NOTIFICATION_ID, buildNotification("Ready"))
+        startForeground(NOTIFICATION_ID, buildNotification(notificationText(graph.queue.tasks.value)))
 
-        queueManager!!.tasks.onEach { tasks ->
-            val downloading = tasks.count { it.state == DownloadState.DOWNLOADING }
-            val queued = tasks.count { it.state == DownloadState.QUEUED }
-            val text = when {
-                downloading > 0 -> "Downloading $downloading file(s), $queued queued"
-                queued > 0 -> "$queued file(s) queued"
-                else -> "No active downloads"
-            }
-            updateNotification(text)
-        }.launchIn(serviceScope)
-    }
-
-    // Temporary inline wiring; Task 11 moves this into the AppGraph.
-    private fun createQueueManager(engine: DownloaderEngine): DownloadQueueManager {
-        val io = platformFileIO()
-        val storageDir = appStorageDir()
-        val history = HistoryRepository(
-            JsonFileStore(io, "$storageDir/history.json", ListSerializer(HistoryEntry.serializer()), emptyList()),
-            io,
-        )
-        return DownloadQueueManager(
-            engine = engine,
-            history = history,
-            store = JsonFileStore(io, "$storageDir/queue.json", ListSerializer(DownloadTask.serializer()), emptyList()),
-            thumbnails = KtorThumbnailSaver(HttpClient(), io, "$storageDir/thumbnails"),
-            io = io,
-            downloadDir = platformDownloadDir(),
-            scope = serviceScope,
-            clock = System::currentTimeMillis,
-        )
+        graph.queue.tasks
+            .map(::notificationText)
+            .distinctUntilChanged()
+            .onEach(::updateNotification)
+            .launchIn(graph.scope)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int = START_STICKY
@@ -78,9 +38,7 @@ class DownloadService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
-        serviceScope.cancel()
-        engine = null
-        queueManager = null
+        AppGraphHolder.release()
     }
 
     private fun createNotificationChannel() {
@@ -92,7 +50,7 @@ class DownloadService : Service() {
 
     private fun buildNotification(text: String) =
         NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("HomeCinema")
+            .setContentTitle("GrabThatVideo")
             .setContentText(text)
             .setSmallIcon(android.R.drawable.stat_sys_download)
             .setOngoing(true)
@@ -107,9 +65,20 @@ class DownloadService : Service() {
         private const val CHANNEL_ID = "homecinema_downloads"
         private const val NOTIFICATION_ID = 1
 
-        var engine: DownloaderEngine? = null
-            private set
-        var queueManager: DownloadQueueManager? = null
-            private set
+        /** The single app graph, shared with [MainActivity]. */
+        val graph: AppGraph get() = AppGraphHolder.getOrCreate()
     }
+}
+
+/** e.g. "Downloading 2 · 1 queued · 1 paused", or "No active downloads". */
+private fun notificationText(tasks: List<DownloadTask>): String {
+    val downloading = tasks.count { it.state == DownloadState.DOWNLOADING }
+    val queued = tasks.count { it.state == DownloadState.QUEUED }
+    val paused = tasks.count { it.state == DownloadState.PAUSED }
+    val parts = buildList {
+        if (downloading > 0) add("Downloading $downloading")
+        if (queued > 0) add("$queued queued")
+        if (paused > 0) add("$paused paused")
+    }
+    return parts.joinToString(" · ").ifEmpty { "No active downloads" }
 }

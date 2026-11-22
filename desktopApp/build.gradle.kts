@@ -40,8 +40,8 @@ compose.desktop {
             targetFormats(TargetFormat.Rpm)
             packageName = "homecinema"
             packageVersion = "1.0.0"
-            description = "HomeCinema – multiplatform video downloader"
-            vendor = "HomeCinema"
+            description = "GrabThatVideo – multiplatform video downloader"
+            vendor = "GrabThatVideo"
 
             linux {
                 packageName = "homecinema"
