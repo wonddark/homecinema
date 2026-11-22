@@ -9,7 +9,7 @@ import java.awt.datatransfer.StringSelection
 import java.io.File
 
 /** Desktop actions: AWT `Desktop` for opening, the system clipboard for "share". Failures are swallowed. */
-private object DesktopPlatformActions : PlatformActions {
+internal object DesktopPlatformActions : PlatformActions {
     override fun openFile(path: String) = open(File(path))
 
     override fun shareFile(path: String): ShareResult {

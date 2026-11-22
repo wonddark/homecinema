@@ -3,6 +3,7 @@ package com.homecinema.core.downloader
 import com.homecinema.domain.DownloadTask
 import com.homecinema.domain.VideoInfo
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
@@ -36,16 +37,23 @@ class DownloaderEngineDesktop : DownloaderEngine {
         }
     }
 
+    /**
+     * stdout carries only the JSON; stderr (warnings such as "version is older than 90 days", and errors) is
+     * read separately — merging the two made every fetch fail to parse.
+     */
     override suspend fun extractInfo(url: String): VideoInfo =
         withContext(Dispatchers.IO) {
-            val process =
-                ProcessBuilder("yt-dlp", "--dump-json", "--no-playlist", url)
-                    .redirectErrorStream(true)
-                    .start()
-            val output = process.inputStream.bufferedReader().readText()
-            process.waitFor()
-
-            parseVideoInfo(output, url.hashCode().toString())
+            val process = ProcessBuilder("yt-dlp", "--dump-json", "--no-playlist", url).start()
+            try {
+                val stderr = async { process.errorStream.bufferedReader().readText() }
+                val output = process.inputStream.bufferedReader().readText()
+                val exit = process.waitFor()
+                val errors = stderr.await()
+                if (exit != 0 || output.isBlank()) throw RuntimeException(lastErrorLine(errors))
+                parseVideoInfo(output, url.hashCode().toString())
+            } finally {
+                process.destroy()
+            }
         }
 
     override suspend fun download(

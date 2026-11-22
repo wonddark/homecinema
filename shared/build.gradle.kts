@@ -69,9 +69,13 @@ kotlin {
     }
 }
 
-// Pass -PhistoryRenderDir=<dir> to have HistoryRenderCheck write its PNGs (it is skipped otherwise).
+// Opt-in desktopTest checks (each is skipped unless its property is passed):
+// -PhistoryRenderDir=<dir> / -PhomeRenderDir=<dir> / -PthemeRenderDir=<dir> write render PNGs;
+// -Pe2e=true runs DesktopE2ETest against the real yt-dlp, ffmpeg and network.
 tasks.withType<Test>().configureEach {
-    providers.gradleProperty("historyRenderDir").orNull?.let { systemProperty("historyRenderDir", it) }
+    listOf("historyRenderDir", "homeRenderDir", "themeRenderDir", "e2e").forEach { name ->
+        providers.gradleProperty(name).orNull?.let { systemProperty(name, it) }
+    }
 }
 
 android {
