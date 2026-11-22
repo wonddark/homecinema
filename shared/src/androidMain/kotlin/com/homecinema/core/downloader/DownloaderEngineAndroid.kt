@@ -13,6 +13,14 @@ actual fun createDownloaderEngine(): DownloaderEngine = DownloaderEngineAndroid(
 
 private val FLAG_ONLY = setOf("--continue", "--newline", "--no-playlist", "--no-mtime")
 
+/**
+ * YoutubeDL.execute() appends its own options (--no-cache-dir, --ffmpeg-location, …) after ours, so a "--"
+ * end-of-options marker cannot be used here; refuse text yt-dlp would parse as an option instead.
+ */
+private fun requireNotOption(url: String) {
+    require(!url.trimStart().startsWith("-")) { "ERROR: not a URL" }
+}
+
 class DownloaderEngineAndroid : DownloaderEngine {
     override val ffmpegAvailable: Boolean = true
 
@@ -23,6 +31,7 @@ class DownloaderEngineAndroid : DownloaderEngine {
 
     override suspend fun extractInfo(url: String): VideoInfo =
         withContext(Dispatchers.IO) {
+            requireNotOption(url)
             val request =
                 YoutubeDLRequest(url).apply {
                     addOption("--dump-json")
@@ -38,6 +47,7 @@ class DownloaderEngineAndroid : DownloaderEngine {
         onProgress: (Float) -> Unit,
     ): String =
         withContext(Dispatchers.IO) {
+            requireNotOption(task.url)
             tasks[task.id] = task
             outputDirs[task.id] = outputDir
             val request =

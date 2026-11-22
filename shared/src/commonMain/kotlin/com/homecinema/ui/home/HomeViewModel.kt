@@ -108,6 +108,12 @@ class HomeViewModel(
     private fun fetch(url: String) {
         fetchJob?.cancel()
         val token = ++fetchToken
+        // yt-dlp would read it as an option (e.g. --exec), not a URL; never pass it on.
+        if (url.startsWith("-")) {
+            fetchJob = null
+            _state.update { it.copy(input = url, fetch = FetchState.Failed(url)) }
+            return
+        }
         _state.update { it.copy(input = url, fetch = FetchState.Fetching(url)) }
         fetchJob = scope.launch {
             val result = try {

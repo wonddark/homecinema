@@ -14,6 +14,7 @@ actual fun createDownloaderEngine(): DownloaderEngine = DownloaderEngineDesktop(
 /**
  * Desktop implementation using yt-dlp CLI.
  * Requires `yt-dlp` to be installed and available on PATH.
+ * The URL always follows "--" so text that starts with "-" can never be read as an option.
  */
 class DownloaderEngineDesktop : DownloaderEngine {
     private val activeProcesses = ConcurrentHashMap<String, Process>()
@@ -43,7 +44,7 @@ class DownloaderEngineDesktop : DownloaderEngine {
      */
     override suspend fun extractInfo(url: String): VideoInfo =
         withContext(Dispatchers.IO) {
-            val process = ProcessBuilder("yt-dlp", "--dump-json", "--no-playlist", url).start()
+            val process = ProcessBuilder("yt-dlp", "--dump-json", "--no-playlist", "--", url).start()
             try {
                 val stderr = async { process.errorStream.bufferedReader().readText() }
                 val output = process.inputStream.bufferedReader().readText()
@@ -65,7 +66,7 @@ class DownloaderEngineDesktop : DownloaderEngine {
             tasks[task.id] = task
             outputDirs[task.id] = outputDir
             val command =
-                listOf("yt-dlp") + buildDownloadArgs(task, outputDir, ffmpegAvailable) + listOf(task.url)
+                listOf("yt-dlp") + buildDownloadArgs(task, outputDir, ffmpegAvailable) + listOf("--", task.url)
             val process = ProcessBuilder(command).redirectErrorStream(true).start()
             activeProcesses[task.id] = process
 

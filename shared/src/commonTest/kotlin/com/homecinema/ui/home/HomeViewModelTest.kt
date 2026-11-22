@@ -202,4 +202,19 @@ class HomeViewModelTest {
         vm.onPause("a"); vm.onResume("b"); vm.onRetry("c"); vm.onRemove("d")
         assertEquals(listOf("pause:a", "resume:b", "retry:c", "remove:d"), queue.calls)
     }
+    @Test
+    fun `text starting with a dash fails without reaching yt-dlp`() = runTest {
+        val (vm, engine) = vm()
+        vm.onPaste(" --exec rm-rf ")
+        runCurrent()
+        assertEquals(FetchState.Failed("--exec rm-rf"), vm.state.value.fetch)
+        vm.onInputChange("-o /tmp/x")
+        vm.onSubmit()
+        runCurrent()
+        assertEquals(FetchState.Failed("-o /tmp/x"), vm.state.value.fetch)
+        vm.onRetryFetch()
+        runCurrent()
+        assertEquals(FetchState.Failed("-o /tmp/x"), vm.state.value.fetch)
+        assertEquals(0, engine.calls)
+    }
 }
