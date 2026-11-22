@@ -62,8 +62,12 @@ class AppGraph(
         queue.restore()
     }
 
-    /** Kills running downloads first (their blocking reads ignore cancellation), then cancels, then frees the client. */
+    /**
+     * Tells the queue to ignore the coming kills (so interrupted downloads restore as PAUSED, not FAILED), kills
+     * running downloads (their blocking reads ignore cancellation), then cancels, then frees the client.
+     */
     fun close() {
+        queue.shutdown()
         engine.shutdown()
         scope.cancel()
         httpClient.close()

@@ -10,6 +10,7 @@ import com.homecinema.core.storage.JsonFileStore
 import com.homecinema.domain.DownloadState
 import com.homecinema.domain.DownloadTask
 import com.homecinema.domain.HistoryEntry
+import kotlin.concurrent.Volatile
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
@@ -43,6 +44,9 @@ class DownloadQueueManager(
 ) : DownloadQueue {
     private val mutex = Mutex()
     private val activeRuns = mutableMapOf<String, Any>()
+
+    @Volatile
+    private var closed = false
     private val _tasks = MutableStateFlow<List<DownloadTask>>(emptyList())
 
     /** Non-completed tasks in insertion order. */
@@ -63,12 +67,20 @@ class DownloadQueueManager(
 
     override fun enqueue(task: DownloadTask) =
         locked {
-            if (_tasks.value.none { it.id == task.id }) {
+            if (_tasks.value.none { it.id == task.id || it.sameOutputAs(task) }) {
                 _tasks.value += task.copy(state = DownloadState.QUEUED, addedAt = clock())
                 persist()
                 pump()
             }
         }
+
+    /**
+     * Call before the engine kills its processes on app exit. Afterwards a failing download is not marked
+     * FAILED and nothing new starts, so queue.json keeps DOWNLOADING and the next [restore] makes it PAUSED.
+     */
+    fun shutdown() {
+        closed = true
+    }
 
     override fun pause(id: String) =
         locked {
@@ -106,6 +118,7 @@ class DownloadQueueManager(
     // --- Everything below runs under [mutex]. ---
 
     private fun pump() {
+        if (closed) return
         var running = _tasks.value.count { it.state == DownloadState.DOWNLOADING }
         while (running < maxConcurrent) {
             val next = _tasks.value.firstOrNull { it.state == DownloadState.QUEUED } ?: return
@@ -156,7 +169,8 @@ class DownloadQueueManager(
         token: Any,
         reason: String,
     ) = mutex.withLock {
-        if (activeRuns[id] !== token) return@withLock // paused or removed: the kill is not a failure
+        // Paused, removed or shutting down: the kill is not a failure.
+        if (closed || activeRuns[id] !== token) return@withLock
         activeRuns.remove(id)
         transition(id) { it.copy(state = DownloadState.FAILED, errorReason = reason) }
         pump()
@@ -200,6 +214,12 @@ class DownloadQueueManager(
             .filter { (name, _) -> isOwnPartialFile(name) }
             .filter { (name, _) -> tasks.none { isPartialFileOf(name, it) } }
             .forEach { (_, path) -> io.delete(path) }
+    }
+
+    /** An unfinished task writing the same file (same video, quality and kind) would share its .part. */
+    private fun DownloadTask.sameOutputAs(other: DownloadTask): Boolean {
+        val videoId = videoInfo?.id ?: return false
+        return videoId == other.videoInfo?.id && qualityLabel == other.qualityLabel && kind == other.kind
     }
 
     private fun find(id: String) = _tasks.value.firstOrNull { it.id == id }

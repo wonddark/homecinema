@@ -67,4 +67,33 @@ class YtDlpArgsTest {
         val lines = sequenceOf("[download] /dl/a.mp4 has already been downloaded")
         assertEquals("/dl/a.mp4", parseFinalPath(lines))
     }
+    @Test
+    fun `own partial files need our quality label before the extension`() {
+        listOf(
+            "T [abc] 1080p.mp4.part",
+            "T [abc] 4K.f313.webm.part",
+            "T [abc] 2K.mp4.ytdl",
+            "T [abc] Best.mp4.part",
+            "T [abc] 128kbps.m4a.part",
+            "T [abc] WEBM.webm.part",
+        ).forEach { assertTrue(isOwnPartialFile(it), it) }
+        listOf(
+            "Movie [x] y.mkv.part",
+            "Album [2020] track one.mp3.part",
+            "T [abc] 1080p.mp4",
+            "foreign.zip.part",
+        ).forEach { assertFalse(isOwnPartialFile(it), it) }
+    }
+
+    @Test
+    fun `lastErrorLine prefers the last ERROR line`() {
+        val output = "WARNING: old version\nERROR: first\n[info] noise\nERROR: Private video\n  trailing  \n"
+        assertEquals("ERROR: Private video", lastErrorLine(output))
+    }
+
+    @Test
+    fun `lastErrorLine falls back to the last non-blank line`() {
+        assertEquals("[download] stopped", lastErrorLine("[info] a\n  [download] stopped  \n\n"))
+        assertEquals("", lastErrorLine("  \n"))
+    }
 }

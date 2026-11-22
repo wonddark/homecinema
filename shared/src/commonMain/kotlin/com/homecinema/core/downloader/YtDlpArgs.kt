@@ -25,7 +25,9 @@ fun outputTemplate(
     outputDir: String,
 ): String = "$outputDir/%(title)s [%(id)s] ${task.qualityLabel}.%(ext)s"
 
-private val ownPartialFile = Regex("""\[[^\]]+] [^/]+\.(part|ytdl)$""")
+/** "[<id>] <quality label>" then an optional ".f<format>" and the media extension before ".part"/".ytdl". */
+private val ownPartialFile =
+    Regex("""\[[^\]]+] (\d+p|4K|2K|Best|\d+kbps|[A-Z0-9]{2,5})(\.f\d+)?\.[A-Za-z0-9]+\.(part|ytdl)$""")
 
 /**
  * True for a partial-download file produced from [outputTemplate] (the "[<id>] <quality>" signature,

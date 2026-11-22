@@ -244,4 +244,75 @@ class DownloadQueueManagerTest {
             assertFalse(io.exists("dl/T [zzz] 720p.mp4.part"))
             assertFalse(io.exists("dl/T [zzz] 720p.f137.mp4.part"))
         }
+    @Test
+    fun `shutdown ignores the kill of running downloads so restore pauses them`() =
+        runTest {
+            val m = manager()
+            m.enqueue(task("t1"))
+            runCurrent()
+            m.shutdown()
+            engine.fail("t1", "ERROR: process killed")
+            runCurrent()
+            assertFalse(io.read("/data/queue.json")!!.contains("FAILED"))
+            val restored = manager()
+            restored.restore()
+            runCurrent()
+            assertEquals(DownloadState.PAUSED, restored.stateOf("t1"))
+            assertNull(restored.tasks.value.single().errorReason)
+        }
+
+    @Test
+    fun `enqueue ignores a duplicate of an unfinished task`() =
+        runTest {
+            val m = manager()
+            m.enqueue(task("t1", videoId = "same"))
+            m.enqueue(task("t2", videoId = "same"))
+            runCurrent()
+            assertEquals(listOf("t1"), m.tasks.value.map { it.id })
+            assertEquals(listOf("t1"), engine.downloadCalls.map { it.id })
+        }
+
+    @Test
+    fun `enqueue accepts same video with other quality or kind`() =
+        runTest {
+            val m = manager()
+            m.enqueue(task("t1", videoId = "same"))
+            m.enqueue(task("t2", videoId = "same").copy(qualityLabel = "720p"))
+            m.enqueue(task("t3", videoId = "same").copy(kind = MediaKind.AUDIO))
+            runCurrent()
+            assertEquals(listOf("t1", "t2", "t3"), m.tasks.value.map { it.id })
+        }
+
+    @Test
+    fun `enqueue accepts a duplicate again once the first completed`() =
+        runTest {
+            val m = manager()
+            m.enqueue(task("t1", videoId = "same"))
+            runCurrent()
+            engine.complete("t1", "dl/Title t1 [same] 1080p.mp4")
+            runCurrent()
+            m.enqueue(task("t2", videoId = "same"))
+            runCurrent()
+            assertEquals(listOf("t2"), m.tasks.value.map { it.id })
+        }
+
+    @Test
+    fun `sweep keeps foreign bracketed part files`() =
+        runTest {
+            io.write("dl/Movie [x] y.mkv.part", "x")
+            io.write("dl/Song [abc] remix.mp3.ytdl", "x")
+            io.write("dl/T [zzz] 4K.mp4.part", "x")
+            io.write("dl/T [zzz] 128kbps.m4a.part", "x")
+            io.write("dl/T [zzz] M4A.m4a.ytdl", "x")
+            io.write("dl/T [zzz] Best.f18.mp4.part", "x")
+            val m = manager()
+            m.restore()
+            runCurrent()
+            assertTrue(io.exists("dl/Movie [x] y.mkv.part"))
+            assertTrue(io.exists("dl/Song [abc] remix.mp3.ytdl"))
+            assertFalse(io.exists("dl/T [zzz] 4K.mp4.part"))
+            assertFalse(io.exists("dl/T [zzz] 128kbps.m4a.part"))
+            assertFalse(io.exists("dl/T [zzz] M4A.m4a.ytdl"))
+            assertFalse(io.exists("dl/T [zzz] Best.f18.mp4.part"))
+        }
 }
