@@ -39,6 +39,8 @@ android {
 
 dependencies {
     implementation(project(":shared"))
+    implementation(compose.foundation)
+    implementation(compose.material3)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.androidx.activity.compose)
     implementation(libs.youtubedl.android)

@@ -10,5 +10,10 @@ data class DownloadTask(
     val format: String? = null,
     val state: DownloadState = DownloadState.QUEUED,
     val progress: Float = 0f,
-    val outputPath: String? = null
+    val outputPath: String? = null,
+    val kind: MediaKind = MediaKind.VIDEO,
+    val qualityLabel: String = "",
+    val sizeBytes: Long? = null,
+    val addedAt: Long = 0L,
+    val errorReason: String? = null,
 )

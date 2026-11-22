@@ -1,24 +1,25 @@
 package com.homecinema.desktop
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Text
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
-import com.homecinema.core.downloader.createDownloaderEngine
-import com.homecinema.core.usecase.DownloadQueueManager
-import com.homecinema.core.usecase.DownloadViewModel
-import com.homecinema.ui.DownloadScreen
 import com.homecinema.ui.theme.AppTheme
 import kotlin.system.exitProcess
 
 fun main() {
     application {
-    val engine = createDownloaderEngine()
-    val viewModel = DownloadViewModel(engine = engine, queueManager = DownloadQueueManager(engine))
         Window(
             onCloseRequest = ::exitApplication,
-            title = "HomeCinema"
+            title = "GrabThatVideo"
         ) {
             AppTheme {
-                DownloadScreen(viewModel = viewModel)
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("GrabThatVideo")
+                }
             }
         }
     }
