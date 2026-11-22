@@ -1,18 +1,18 @@
 package com.homecinema.ui
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.foundation.shape.CornerSize
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -25,6 +25,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.homecinema.core.usecase.DownloadViewModel
 import com.homecinema.ui.components.AppButton
 import com.homecinema.ui.components.AppTextField
@@ -61,22 +62,50 @@ fun DownloadScreen(viewModel: DownloadViewModel) {
                     .padding(AppSpacing.large),
         ) {
             // URL input
-            AppTextField(
-                value = uiState.urlInput,
-                onChange = viewModel::onUrlChanged,
-                placeholder = "Video URL",
-                modifier = Modifier.fillMaxWidth(),
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(0.dp),
+            ) {
+                AppTextField(
+                    value = uiState.urlInput,
+                    onChange = viewModel::onUrlChanged,
+                    placeholder = "Video URL",
+                    modifier = Modifier.weight(weight = 1f, fill = true),
+                    shape =
+                        RoundedCornerShape(
+                            topStart = MaterialTheme.shapes.extraLarge.topStart,
+                            bottomStart = MaterialTheme.shapes.extraLarge.bottomStart,
+                            topEnd =
+                                MaterialTheme.shapes.small
+                                    .copy(all = CornerSize(size = 0.dp))
+                                    .topEnd,
+                            bottomEnd =
+                                MaterialTheme.shapes.small
+                                    .copy(all = CornerSize(size = 0.dp))
+                                    .bottomEnd,
+                        ),
+                )
 
-            Spacer(Modifier.height(AppSpacing.medium))
-
-            AppButton(
-                text = "Add",
-                onClick = { viewModel.onStartDownload(uiState.urlInput) },
-                enabled = uiState.urlInput.isNotBlank(),
-                modifier = Modifier.fillMaxWidth(),
-                loading = uiState.isLoadingInfo,
-            )
+                AppButton(
+                    text = "Add",
+                    onClick = { viewModel.onStartDownload(uiState.urlInput) },
+                    enabled = uiState.urlInput.isNotBlank(),
+                    loading = uiState.isLoadingInfo,
+                    shape =
+                        RoundedCornerShape(
+                            topStart =
+                                MaterialTheme.shapes.small
+                                    .copy(all = CornerSize(size = 0.dp))
+                                    .topStart,
+                            bottomStart =
+                                MaterialTheme.shapes.small
+                                    .copy(all = CornerSize(size = 0.dp))
+                                    .bottomStart,
+                            topEnd = MaterialTheme.shapes.extraLarge.topEnd,
+                            bottomEnd = MaterialTheme.shapes.extraLarge.bottomEnd,
+                        ),
+                )
+            }
 
             Spacer(Modifier.height(AppSpacing.large))
 
@@ -96,7 +125,7 @@ fun DownloadScreen(viewModel: DownloadViewModel) {
                             },
                             onRetry = { viewModel.onRetryDownload(task.id) },
                             onRemove = { viewModel.onRemoveDownload(task.id) },
-                            onLocate = { viewModel.onLocateDownload(task.id) }
+                            onLocate = { viewModel.onLocateDownload(task.id) },
                         )
                     }
                 }
@@ -114,7 +143,7 @@ fun DownloadScreen(viewModel: DownloadViewModel) {
                             },
                             onRetry = { viewModel.onRetryDownload(task.id) },
                             onRemove = { viewModel.onRemoveDownload(task.id) },
-                            onLocate = { viewModel.onLocateDownload(task.id) }
+                            onLocate = { viewModel.onLocateDownload(task.id) },
                         )
                     }
                 }

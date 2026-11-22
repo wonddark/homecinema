@@ -12,12 +12,12 @@ fun selectFormat(
     preference: FormatPreference,
 ): VideoFormat? {
     if (formats.isEmpty()) return null
-    println(formats)
+
     return when (preference) {
         FormatPreference.BEST_QUALITY -> {
             // Prefer the highest resolution; fall back to first format
             formats.maxByOrNull { fmt ->
-                fmt.filesize_approx ?: 0
+                fmt.size ?: 0
             } ?: formats.last()
         }
 

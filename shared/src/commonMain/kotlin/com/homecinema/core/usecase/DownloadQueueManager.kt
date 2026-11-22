@@ -28,13 +28,15 @@ class DownloadQueueManager(
         updateTaskState(nextTask.id, DownloadState.DOWNLOADING)
         scope.launch {
             try {
-                val outputPath = engine.download(
-                    taskId = nextTask.id,
-                    url = nextTask.url,
-                    formatId = nextTask.format ?: "best",
-                    outputPath = platformDownloadDir(),
-                    onProgress = { progress -> updateTaskProgress(nextTask.id, progress) },
-                )
+                val outputPath =
+                    engine.download(
+                        taskId = nextTask.id,
+                        url = nextTask.url,
+                        formatId = "best",
+//                    formatId = nextTask.format ?: "best",
+                        outputPath = platformDownloadDir(),
+                        onProgress = { progress -> updateTaskProgress(nextTask.id, progress) },
+                    )
                 markTaskCompleted(nextTask.id, outputPath)
             } catch (e: Exception) {
                 println(e)
@@ -82,12 +84,18 @@ class DownloadQueueManager(
             }
     }
 
-    private fun markTaskCompleted(taskId: String, outputPath: String) {
-        _tasks.value = _tasks.value.map { task ->
-            if (task.id == taskId)
-                task.copy(state = DownloadState.COMPLETED, outputPath = outputPath.ifBlank { null })
-            else task
-        }
+    private fun markTaskCompleted(
+        taskId: String,
+        outputPath: String,
+    ) {
+        _tasks.value =
+            _tasks.value.map { task ->
+                if (task.id == taskId) {
+                    task.copy(state = DownloadState.COMPLETED, outputPath = outputPath.ifBlank { null })
+                } else {
+                    task
+                }
+            }
     }
 
     private fun markTaskFailed(taskId: String) {

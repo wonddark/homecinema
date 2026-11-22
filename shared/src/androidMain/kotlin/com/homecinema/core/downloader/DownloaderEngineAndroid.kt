@@ -25,7 +25,6 @@ class DownloaderEngineAndroid : DownloaderEngine {
                     addOption("--no-playlist")
                 }
             val response = YoutubeDL.getInstance().execute(request)
-            // println(response.out)
             val jsonObj = json.parseToJsonElement(response.out).jsonObject
 
             val id = jsonObj["id"]?.jsonPrimitive?.content ?: url.hashCode().toString()
@@ -53,18 +52,38 @@ class DownloaderEngineAndroid : DownloaderEngine {
         formatId: String,
         outputPath: String,
         onProgress: (Float) -> Unit,
-    ): String = withContext(Dispatchers.IO) {
-        val request =
-            YoutubeDLRequest(url).apply {
-                addOption("-f", formatId)
-                addOption("-o", "$outputPath/%(title)s.%(ext)s")
-                addOption("--no-mtime")
+    ): String =
+        withContext(Dispatchers.IO) {
+            val request =
+                YoutubeDLRequest(url).apply {
+                    addOption("-f", formatId)
+                    addOption("-o", "$outputPath/%(title)s.%(ext)s")
+                    addOption("--no-mtime")
+                }
+            val response = YoutubeDL.getInstance().execute(request, taskId) { progress, _, _ ->
+                onProgress(progress / 100f)
             }
-        YoutubeDL.getInstance().execute(request, taskId) { progress, _, _ ->
-            onProgress(progress / 100f)
+            var capturedPath = ""
+            response.out.lineSequence().forEach { line ->
+                if (line.startsWith("[download] Destination: ")) {
+                    capturedPath = line.removePrefix("[download] Destination: ").trim()
+                }
+                if (line.contains("has already been downloaded")) {
+                    val alreadyPath = line
+                        .removePrefix("[download] ")
+                        .removeSuffix(" has already been downloaded")
+                        .trim()
+                    if (capturedPath.isEmpty()) capturedPath = alreadyPath
+                }
+                if (line.startsWith("[Merger] Merging formats into ")) {
+                    capturedPath = line
+                        .removePrefix("[Merger] Merging formats into \"")
+                        .trimEnd('"')
+                        .trim()
+                }
+            }
+            capturedPath
         }
-        ""
-    }
 
     override suspend fun cancel(taskId: String): Unit =
         withContext(Dispatchers.IO) {
