@@ -28,7 +28,7 @@
     <string name="file_show_in_folder">Mostrar en carpeta</string>
     <string name="file_remove">Eliminar</string>
     <string name="file_options">Opciones del archivo</string>
-    <string name="file_not_found">Archivo no encontrado · movido o eliminado</string>
+    <string name="file_not_found">Archivo no encontrado</string>
     <string name="file_not_found_short">archivo no encontrado</string>
     <string name="menu_close">Cerrar menú</string>
     <string name="menu_theme">Tema</string>
@@ -58,9 +58,9 @@
     <string name="downloads_in_progress">En curso</string>
     <string name="downloads_empty_title">No hay descargas en curso</string>
     <string name="downloads_empty_body">Pega un enlace arriba y tus descargas aparecerán aquí.</string>
-    <string name="url_hint">Pega el enlace de un video…</string>
+    <string name="url_hint">Pega un enlace…</string>
     <string name="url_clear">Borrar enlace</string>
-    <string name="step_copy_link">Copia el enlace</string>
+    <string name="step_copy_link">Copia enlace</string>
     <string name="step_paste">Pega</string>
     <string name="step_download">Descarga</string>
     <string name="format_video">MP4 · Video</string>

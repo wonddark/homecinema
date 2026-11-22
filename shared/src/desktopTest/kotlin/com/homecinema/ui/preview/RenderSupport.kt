@@ -10,11 +10,15 @@ import org.jetbrains.skia.Point
 import org.jetbrains.skia.Shader
 import org.jetbrains.skia.Surface
 import java.io.File
+import java.util.Locale
 
 private const val FRAMES = 15
 
 /** Renders [content] at density 2 to a PNG, letting async work (resource fonts, Coil, animations) settle first. */
 internal fun renderPng(file: File, width: Int, height: Int, content: @Composable () -> Unit) {
+    // -PrenderLocale=es renders in that locale; set before the scene so resources resolve with it.
+    val savedLocale = Locale.getDefault()
+    System.getProperty("renderLocale")?.let { Locale.setDefault(Locale.forLanguageTag(it)) }
     val scene = ImageComposeScene(width = width, height = height, density = Density(2f), content = content)
     try {
         var time = 0L
@@ -27,6 +31,7 @@ internal fun renderPng(file: File, width: Int, height: Int, content: @Composable
         file.writeBytes(bytes)
     } finally {
         scene.close()
+        Locale.setDefault(savedLocale)
     }
 }
 

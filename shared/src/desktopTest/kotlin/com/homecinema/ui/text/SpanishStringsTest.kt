@@ -1,5 +1,7 @@
 package com.homecinema.ui.text
 
+import com.homecinema.core.notification.NotificationCounts
+import com.homecinema.core.notification.notificationText
 import homecinema.shared.generated.resources.Res
 import homecinema.shared.generated.resources.failure_generic
 import homecinema.shared.generated.resources.files_count
@@ -49,5 +51,11 @@ class SpanishStringsTest {
     @Test
     fun `spanish months`() = withLocale(Locale.forLanguageTag("es")) {
         assertEquals("nov", getStringArray(Res.array.months_short)[10])
+    }
+
+    @Test
+    fun `spanish notification text`() = withLocale(Locale.forLanguageTag("es")) {
+        assertEquals("Descargando 2 · 1 en cola", notificationText(NotificationCounts(2, 1, 0)))
+        assertEquals("No hay descargas activas", notificationText(NotificationCounts(0, 0, 0)))
     }
 }

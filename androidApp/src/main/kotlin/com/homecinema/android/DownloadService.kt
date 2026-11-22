@@ -7,13 +7,15 @@ import android.content.Intent
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
-import com.homecinema.domain.DownloadState
-import com.homecinema.domain.DownloadTask
+import com.homecinema.core.notification.downloadsChannelName
+import com.homecinema.core.notification.notificationCounts
+import com.homecinema.core.notification.notificationText
 import com.homecinema.ui.AppGraph
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.runBlocking
 
 /** Foreground service that owns the [AppGraph] (and so the download queue) for the process lifetime. */
 class DownloadService : Service() {
@@ -22,11 +24,15 @@ class DownloadService : Service() {
         super.onCreate()
         val graph = AppGraphHolder.getOrCreate()
 
-        createNotificationChannel()
-        startForeground(NOTIFICATION_ID, buildNotification(notificationText(graph.queue.tasks.value)))
+        // startForeground must run synchronously, so resolve the (small, bundled) strings blocking.
+        val (channelName, initialText) = runBlocking {
+            downloadsChannelName() to notificationText(notificationCounts(graph.queue.tasks.value))
+        }
+        createNotificationChannel(channelName)
+        startForeground(NOTIFICATION_ID, buildNotification(initialText))
 
         graph.queue.tasks
-            .map(::notificationText)
+            .map { notificationText(notificationCounts(it)) }
             .distinctUntilChanged()
             .onEach(::updateNotification)
             .launchIn(graph.scope)
@@ -41,9 +47,9 @@ class DownloadService : Service() {
         AppGraphHolder.release()
     }
 
-    private fun createNotificationChannel() {
+    private fun createNotificationChannel(name: String) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(CHANNEL_ID, "Downloads", NotificationManager.IMPORTANCE_LOW)
+            val channel = NotificationChannel(CHANNEL_ID, name, NotificationManager.IMPORTANCE_LOW)
             getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
         }
     }
@@ -68,17 +74,4 @@ class DownloadService : Service() {
         /** The single app graph, shared with [MainActivity]. */
         val graph: AppGraph get() = AppGraphHolder.getOrCreate()
     }
-}
-
-/** e.g. "Downloading 2 · 1 queued · 1 paused", or "No active downloads". */
-private fun notificationText(tasks: List<DownloadTask>): String {
-    val downloading = tasks.count { it.state == DownloadState.DOWNLOADING }
-    val queued = tasks.count { it.state == DownloadState.QUEUED }
-    val paused = tasks.count { it.state == DownloadState.PAUSED }
-    val parts = buildList {
-        if (downloading > 0) add("Downloading $downloading")
-        if (queued > 0) add("$queued queued")
-        if (paused > 0) add("$paused paused")
-    }
-    return parts.joinToString(" · ").ifEmpty { "No active downloads" }
 }
