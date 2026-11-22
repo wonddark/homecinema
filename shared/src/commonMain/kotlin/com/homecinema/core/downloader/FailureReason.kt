@@ -1,13 +1,18 @@
 package com.homecinema.core.downloader
 
-fun mapFailureReason(message: String?): String {
+import kotlinx.serialization.Serializable
+
+@Serializable
+enum class FailureReason { BLOCKED, CONNECTION_LOST, UNAVAILABLE, UNSUPPORTED, GENERIC }
+
+fun mapFailureReason(message: String?): FailureReason {
     val text = message.orEmpty()
     return when {
-        text.contains("HTTP Error 403") -> "Blocked by site"
+        text.contains("HTTP Error 403") -> FailureReason.BLOCKED
         listOf("Unable to download", "timed out", "Connection", "Network").any { text.contains(it) } ->
-            "Connection lost"
-        listOf("Private video", "unavailable", "removed").any { text.contains(it) } -> "Unavailable"
-        text.contains("Unsupported URL") -> "Unsupported site"
-        else -> "Download failed"
+            FailureReason.CONNECTION_LOST
+        listOf("Private video", "unavailable", "removed").any { text.contains(it) } -> FailureReason.UNAVAILABLE
+        text.contains("Unsupported URL") -> FailureReason.UNSUPPORTED
+        else -> FailureReason.GENERIC
     }
 }

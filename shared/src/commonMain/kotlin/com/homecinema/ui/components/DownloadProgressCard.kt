@@ -189,7 +189,7 @@ fun progressMeta(task: DownloadTask): String {
     val segments = when (task.state) {
         DownloadState.QUEUED -> listOf(extractor, quality, "Queued")
         DownloadState.PAUSED -> listOf("Paused", quality, size)
-        DownloadState.FAILED -> listOf("Failed", task.errorReason)
+        DownloadState.FAILED -> listOf("Failed", task.failure?.name)
         DownloadState.DOWNLOADING, DownloadState.COMPLETED -> {
             val tail = if (task.progress == 0f) "Starting…" else size
             listOf(extractor, quality, tail)

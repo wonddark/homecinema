@@ -1,5 +1,6 @@
 package com.homecinema
 
+import com.homecinema.core.downloader.FailureReason
 import com.homecinema.core.history.HistoryRepository
 import com.homecinema.core.storage.FakeFileIO
 import com.homecinema.core.storage.JsonFileStore
@@ -120,7 +121,7 @@ class DownloadQueueManagerTest {
             m.pause("t1")
             runCurrent()
             assertEquals(DownloadState.PAUSED, m.stateOf("t1"))
-            assertNull(m.tasks.value.single().errorReason)
+            assertNull(m.tasks.value.single().failure)
             assertEquals(listOf("t1"), engine.pausedIds)
             assertTrue(io.read("/data/queue.json")!!.contains("PAUSED"))
         }
@@ -147,11 +148,11 @@ class DownloadQueueManagerTest {
             runCurrent()
             engine.fail("t1", "ERROR: Private video")
             runCurrent()
-            assertEquals("Unavailable", m.tasks.value.single().errorReason)
+            assertEquals(FailureReason.UNAVAILABLE, m.tasks.value.single().failure)
             m.retry("t1")
             runCurrent()
             assertEquals(DownloadState.DOWNLOADING, m.stateOf("t1"))
-            assertNull(m.tasks.value.single().errorReason)
+            assertNull(m.tasks.value.single().failure)
         }
 
     @Test
@@ -164,7 +165,7 @@ class DownloadQueueManagerTest {
             runCurrent()
             val t = m.tasks.value.single()
             assertEquals(DownloadState.FAILED, t.state)
-            assertEquals("Connection lost", t.errorReason)
+            assertEquals(FailureReason.CONNECTION_LOST, t.failure)
         }
 
     @Test
@@ -225,7 +226,7 @@ class DownloadQueueManagerTest {
             runCurrent()
             val t = m.tasks.value.single()
             assertEquals(DownloadState.FAILED, t.state)
-            assertEquals("Download failed", t.errorReason)
+            assertEquals(FailureReason.GENERIC, t.failure)
             assertTrue(history.entries.value.isEmpty())
         }
 
@@ -258,7 +259,22 @@ class DownloadQueueManagerTest {
             restored.restore()
             runCurrent()
             assertEquals(DownloadState.PAUSED, restored.stateOf("t1"))
-            assertNull(restored.tasks.value.single().errorReason)
+            assertNull(restored.tasks.value.single().failure)
+        }
+
+    @Test
+    fun `legacy queue with english errorReason loads as failed with unknown reason`() =
+        runTest {
+            io.write(
+                "/data/queue.json",
+                """[{"id":"t","url":"u","state":"FAILED","errorReason":"Connection lost"}]""",
+            )
+            val restored = manager()
+            restored.restore()
+            runCurrent()
+            val t = restored.tasks.value.single()
+            assertEquals(DownloadState.FAILED, t.state)
+            assertNull(t.failure)
         }
 
     @Test

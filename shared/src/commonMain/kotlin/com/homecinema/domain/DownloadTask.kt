@@ -1,5 +1,6 @@
 package com.homecinema.domain
 
+import com.homecinema.core.downloader.FailureReason
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -15,5 +16,5 @@ data class DownloadTask(
     val qualityLabel: String = "",
     val sizeBytes: Long? = null,
     val addedAt: Long = 0L,
-    val errorReason: String? = null,
+    val failure: FailureReason? = null,
 )

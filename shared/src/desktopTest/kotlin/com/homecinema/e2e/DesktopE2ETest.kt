@@ -259,7 +259,7 @@ class DesktopE2ETest {
         withTimeout(timeout) {
             while (g.history.entries.value.isEmpty()) {
                 g.queue.tasks.value.firstOrNull { it.state == DownloadState.FAILED }?.let {
-                    error("download failed: ${it.errorReason}")
+                    error("download failed: ${it.failure}")
                 }
                 delay(500)
             }

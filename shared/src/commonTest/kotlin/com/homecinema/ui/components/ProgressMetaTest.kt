@@ -1,5 +1,6 @@
 package com.homecinema.ui.components
 
+import com.homecinema.core.downloader.FailureReason
 import com.homecinema.domain.DownloadState
 import com.homecinema.domain.DownloadTask
 import com.homecinema.domain.VideoInfo
@@ -16,7 +17,7 @@ class ProgressMetaTest {
         extractor: String? = "YouTube",
         quality: String = "1080p",
         size: Long? = 248 * mb,
-        error: String? = null,
+        failure: FailureReason? = null,
     ) = DownloadTask(
         id = "t",
         url = "u",
@@ -25,7 +26,7 @@ class ProgressMetaTest {
         progress = progress,
         qualityLabel = quality,
         sizeBytes = size,
-        errorReason = error,
+        failure = failure,
     )
 
     @Test
@@ -50,7 +51,8 @@ class ProgressMetaTest {
 
     @Test
     fun `failed shows the reason`() {
-        assertEquals("Failed · Connection lost", progressMeta(task(DownloadState.FAILED, error = "Connection lost")))
+        val failed = task(DownloadState.FAILED, failure = FailureReason.CONNECTION_LOST)
+        assertEquals("Failed · CONNECTION_LOST", progressMeta(failed))
     }
 
     @Test
@@ -58,7 +60,7 @@ class ProgressMetaTest {
         assertEquals("720p", progressMeta(task(DownloadState.DOWNLOADING, extractor = null, quality = "720p", size = null)))
         assertEquals("Queued", progressMeta(task(DownloadState.QUEUED, extractor = " ", quality = "")))
         assertEquals("Paused", progressMeta(task(DownloadState.PAUSED, quality = "", size = null)))
-        assertEquals("Failed", progressMeta(task(DownloadState.FAILED, error = null)))
+        assertEquals("Failed", progressMeta(task(DownloadState.FAILED, failure = null)))
         assertEquals("1080p · Starting…", progressMeta(task(DownloadState.DOWNLOADING, progress = 0f, extractor = null)))
     }
 }

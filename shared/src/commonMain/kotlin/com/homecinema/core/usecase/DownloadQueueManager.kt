@@ -3,6 +3,7 @@ package com.homecinema.core.usecase
 import com.homecinema.core.downloader.DownloaderEngine
 import com.homecinema.core.downloader.isOwnPartialFile
 import com.homecinema.core.downloader.isPartialFileOf
+import com.homecinema.core.downloader.FailureReason
 import com.homecinema.core.downloader.mapFailureReason
 import com.homecinema.core.history.HistoryRepository
 import com.homecinema.core.storage.FileIO
@@ -111,7 +112,7 @@ class DownloadQueueManager(
         from: DownloadState,
     ) = locked {
         if (find(id)?.state != from) return@locked
-        transition(id) { it.copy(state = DownloadState.QUEUED, errorReason = null) }
+        transition(id) { it.copy(state = DownloadState.QUEUED, failure = null) }
         pump()
     }
 
@@ -167,12 +168,12 @@ class DownloadQueueManager(
     private suspend fun fail(
         id: String,
         token: Any,
-        reason: String,
+        reason: FailureReason,
     ) = mutex.withLock {
         // Paused, removed or shutting down: the kill is not a failure.
         if (closed || activeRuns[id] !== token) return@withLock
         activeRuns.remove(id)
-        transition(id) { it.copy(state = DownloadState.FAILED, errorReason = reason) }
+        transition(id) { it.copy(state = DownloadState.FAILED, failure = reason) }
         pump()
     }
 

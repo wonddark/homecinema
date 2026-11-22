@@ -1,5 +1,6 @@
 package com.homecinema.ui.preview
 
+import com.homecinema.core.downloader.FailureReason
 import com.homecinema.core.format.AudioOption
 import com.homecinema.core.format.FormatOptions
 import com.homecinema.core.format.QualityOption
@@ -72,7 +73,7 @@ object HomePreviewData {
                 task("2", "Street food tour in Tokyo", "Instagram", "720p", 86 * MB, DownloadState.DOWNLOADING, 0.28f, thumbnail),
                 task("3", "Mountain trail run POV", "YouTube", "4K", 1126 * MB, DownloadState.PAUSED, 0.41f, thumbnail),
                 task("4", "How to make fresh pasta", "YouTube", "720p", 40 * MB, DownloadState.FAILED, 0.12f, thumbnail)
-                    .copy(errorReason = "Connection lost"),
+                    .copy(failure = FailureReason.CONNECTION_LOST),
                 task("5", "Rainy night jazz", "YouTube", "MP3", 9 * MB, DownloadState.QUEUED, 0f, null)
                     .copy(kind = MediaKind.AUDIO),
             ),
