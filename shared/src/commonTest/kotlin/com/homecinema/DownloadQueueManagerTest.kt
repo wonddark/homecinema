@@ -214,4 +214,18 @@ class DownloadQueueManagerTest {
             runCurrent()
             assertEquals("137", engine.downloadCalls.single().format)
         }
+
+    @Test
+    fun `blank final path marks failed`() =
+        runTest {
+            val m = manager()
+            m.enqueue(task("t1"))
+            runCurrent()
+            engine.complete("t1", "  ")
+            runCurrent()
+            val t = m.tasks.value.single()
+            assertEquals(DownloadState.FAILED, t.state)
+            assertEquals("Download failed", t.errorReason)
+            assertTrue(history.entries.value.isEmpty())
+        }
 }

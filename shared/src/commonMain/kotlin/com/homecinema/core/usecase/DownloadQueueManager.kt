@@ -131,14 +131,14 @@ class DownloadQueueManager(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                mutex.withLock {
-                    if (activeRuns[task.id] !== token) return // paused or removed: the kill is not a failure
-                    activeRuns.remove(task.id)
-                    transition(task.id) { it.copy(state = DownloadState.FAILED, errorReason = mapFailureReason(e.message)) }
-                    pump()
-                }
+                fail(task.id, token, mapFailureReason(e.message))
                 return
             }
+        // A blank path means the file cannot be located, so it must not reach history.
+        if (path.isBlank()) {
+            fail(task.id, token, mapFailureReason(null))
+            return
+        }
         val thumbnailPath = task.videoInfo?.thumbnailUrl?.let { thumbnails.save(it, task.id) }
         mutex.withLock {
             if (activeRuns[task.id] !== token) return
@@ -148,6 +148,17 @@ class DownloadQueueManager(
             persist()
             pump()
         }
+    }
+
+    private suspend fun fail(
+        id: String,
+        token: Any,
+        reason: String,
+    ) = mutex.withLock {
+        if (activeRuns[id] !== token) return@withLock // paused or removed: the kill is not a failure
+        activeRuns.remove(id)
+        transition(id) { it.copy(state = DownloadState.FAILED, errorReason = reason) }
+        pump()
     }
 
     /** Progress only updates memory; queue.json is written on state transitions. */
