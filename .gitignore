@@ -40,3 +40,5 @@ Thumbs.db
 androidApp/build/
 androidApp/release/
 desktopApp/build/
+# Release signing secrets
+keystore.properties*
