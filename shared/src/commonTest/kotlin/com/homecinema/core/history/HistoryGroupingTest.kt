@@ -41,6 +41,11 @@ class HistoryGroupingTest {
     }
 
     @Test
+    fun `meta uses provided quality text not the stored label`() {
+        assertEquals("MP4 · Mejor", historyMeta(entry(MediaKind.VIDEO, "mp4", "Best", null), quality = "Mejor"))
+    }
+
+    @Test
     fun `meta omits unknown size`() {
         assertEquals("MP4 · 720p", historyMeta(entry(MediaKind.VIDEO, "mp4", "720p", null)))
     }

@@ -2,6 +2,7 @@ package com.homecinema.ui.text
 
 import androidx.compose.runtime.Composable
 import com.homecinema.core.downloader.FailureReason
+import com.homecinema.core.format.BEST_QUALITY_LABEL
 import com.homecinema.core.format.QualityOption
 import com.homecinema.domain.DownloadTask
 import homecinema.shared.generated.resources.Res
@@ -52,6 +53,7 @@ data class ProgressLabels(
     val failed: String,
     val starting: String,
     val failure: String,
+    val quality: String,
 )
 
 /** Human text for a failure; null (tasks saved before [FailureReason] existed) reads as generic. */
@@ -73,6 +75,7 @@ fun progressLabels(task: DownloadTask): ProgressLabels = ProgressLabels(
     failed = stringResource(Res.string.meta_failed),
     starting = stringResource(Res.string.meta_starting),
     failure = failureLabel(task.failure),
+    quality = qualityText(task.qualityLabel),
 )
 
 @Composable
@@ -91,7 +94,7 @@ fun sheetStampText(stamp: SheetStamp): String {
     return when (stamp.day) {
         StampDay.TODAY -> stringResource(Res.string.stamp_today, stamp.time)
         StampDay.YESTERDAY -> stringResource(Res.string.stamp_yesterday, stamp.time)
-        StampDay.DATE -> stringResource(Res.string.stamp_date, stamp.dayOfMonth, months[stamp.monthNumber - 1], stamp.time)
+        StampDay.DATE -> stringResource(Res.string.stamp_date, stamp.dayOfMonth, months.getOrNull(stamp.monthNumber - 1) ?: stamp.monthNumber.toString(), stamp.time)
     }
 }
 
@@ -132,5 +135,8 @@ fun filterLabel(filter: HistoryFilter): String = stringResource(
 
 /** "Best" is a localized placeholder; concrete qualities (1080p, 4K) are language-neutral data. */
 @Composable
-fun qualityOptionLabel(option: QualityOption): String =
-    if (option.formatId == "best") stringResource(Res.string.quality_best) else option.label
+fun qualityText(label: String): String =
+    if (label == BEST_QUALITY_LABEL) stringResource(Res.string.quality_best) else label
+
+@Composable
+fun qualityOptionLabel(option: QualityOption): String = qualityText(option.label)

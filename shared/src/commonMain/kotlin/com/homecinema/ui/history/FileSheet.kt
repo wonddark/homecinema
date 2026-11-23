@@ -39,6 +39,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.homecinema.core.history.historyMeta
+import com.homecinema.ui.text.qualityText
 import com.homecinema.core.history.sheetTimestamp
 import com.homecinema.domain.HistoryEntry
 import com.homecinema.ui.components.AppIcons
@@ -139,7 +140,7 @@ private fun FileHeader(entry: HistoryEntry) {
     val stamp = remember(entry) {
         sheetTimestamp(entry.completedAt, Clock.System.now().toEpochMilliseconds(), TimeZone.currentSystemDefault())
     }
-    val meta = "${historyMeta(entry)} · ${sheetStampText(stamp)}"
+    val meta = "${historyMeta(entry, qualityText(entry.qualityLabel))} · ${sheetStampText(stamp)}"
     Column {
         Row(
             modifier = Modifier.fillMaxWidth().padding(top = 4.dp, bottom = 14.dp),

@@ -23,4 +23,31 @@ class StringCatalogParityTest {
             "Missing in values-es: $missingInEs; missing in values: $missingInEn",
         )
     }
+
+    private val base = "src/commonMain/composeResources"
+    private val itemRegex = Regex("""<item[ >]""")
+    private val arrayRegex = Regex("""<string-array\s+name="([^"]+)"[^>]*>(.*?)</string-array>""", RegexOption.DOT_MATCHES_ALL)
+    private val stringRegex = Regex("""<string\s+name="([^"]+)"[^>]*>(.*?)</string>""", RegexOption.DOT_MATCHES_ALL)
+    private val placeholderRegex = Regex("""%\d+\$[a-zA-Z]""")
+
+    @Test
+    fun `string arrays have the same item count in both catalogs`() {
+        fun counts(path: String) =
+            arrayRegex.findAll(File(path).readText()).associate { it.groupValues[1] to itemRegex.findAll(it.groupValues[2]).count() }
+        val en = counts("$base/values/strings.xml")
+        val es = counts("$base/values-es/strings.xml")
+        assertTrue(en.isNotEmpty(), "No string-arrays found")
+        assertTrue(en == es, "Array item counts differ: en=$en es=$es")
+    }
+
+    @Test
+    fun `strings use the same placeholders in both catalogs`() {
+        fun placeholders(path: String) =
+            stringRegex.findAll(File(path).readText()).associate { it.groupValues[1] to placeholderRegex.findAll(it.groupValues[2]).map { m -> m.value }.toSet() }
+        val en = placeholders("$base/values/strings.xml")
+        val es = placeholders("$base/values-es/strings.xml")
+        val diffs = en.filter { (k, v) -> es[k] != null && es[k] != v }.keys
+        assertTrue(en.values.any { it.isNotEmpty() }, "No placeholders found; regex broken")
+        assertTrue(diffs.isEmpty(), "Placeholder mismatch for: $diffs")
+    }
 }

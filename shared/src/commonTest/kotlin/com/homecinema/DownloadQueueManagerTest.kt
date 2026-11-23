@@ -278,6 +278,21 @@ class DownloadQueueManagerTest {
         }
 
     @Test
+    fun `unknown failure value loads task with null failure`() =
+        runTest {
+            io.write(
+                "/data/queue.json",
+                """[{"id":"t","url":"u","state":"FAILED","failure":"SOMETHING_NEW"}]""",
+            )
+            val restored = manager()
+            restored.restore()
+            runCurrent()
+            val t = restored.tasks.value.single()
+            assertEquals(DownloadState.FAILED, t.state)
+            assertNull(t.failure)
+        }
+
+    @Test
     fun `enqueue ignores a duplicate of an unfinished task`() =
         runTest {
             val m = manager()

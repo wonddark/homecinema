@@ -21,7 +21,9 @@ data class FormatOptions(
 )
 
 private const val DEFAULT_MAX_HEIGHT = 1080
-private val BEST_OPTION = QualityOption("Best", 0, "best", null)
+/** Persisted label of the "best" option; a filename/resume/dedupe key, so never localize the stored value. */
+const val BEST_QUALITY_LABEL = "Best"
+private val BEST_OPTION = QualityOption(BEST_QUALITY_LABEL, 0, "best", null)
 
 fun qualityLabel(height: Int): String =
     when (height) {

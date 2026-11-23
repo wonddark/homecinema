@@ -192,7 +192,7 @@ internal fun removeAllowed(state: DownloadState, sinceStateChange: Duration): Bo
  */
 fun progressMeta(task: DownloadTask, labels: ProgressLabels): String {
     val extractor = task.videoInfo?.extractor
-    val quality = task.qualityLabel
+    val quality = labels.quality
     val size = task.sizeBytes?.let(::formatSize)
     val segments = when (task.state) {
         DownloadState.QUEUED -> listOf(extractor, quality, labels.queued)

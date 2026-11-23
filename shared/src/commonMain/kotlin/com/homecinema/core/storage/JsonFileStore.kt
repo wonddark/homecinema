@@ -9,7 +9,7 @@ class JsonFileStore<T>(
     private val serializer: KSerializer<T>,
     private val default: T,
 ) {
-    private val json = Json { ignoreUnknownKeys = true; encodeDefaults = true }
+    private val json = Json { ignoreUnknownKeys = true; coerceInputValues = true; encodeDefaults = true }
 
     fun load(): T {
         val text = io.read(path) ?: return default

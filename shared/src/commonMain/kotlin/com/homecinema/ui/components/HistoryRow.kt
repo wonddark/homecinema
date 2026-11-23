@@ -22,6 +22,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.homecinema.core.history.historyMeta
+import com.homecinema.ui.text.qualityText
 import com.homecinema.domain.HistoryEntry
 import com.homecinema.domain.MediaKind
 import com.homecinema.ui.theme.AppShapes
@@ -67,7 +68,7 @@ fun HistoryRow(
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
-                if (entry.fileMissing) MissingNotice() else HistoryMeta(historyMeta(entry))
+                if (entry.fileMissing) MissingNotice() else HistoryMeta(historyMeta(entry, qualityText(entry.qualityLabel)))
             }
             Box(
                 modifier = Modifier

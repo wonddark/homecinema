@@ -27,8 +27,8 @@ fun groupOf(completedAt: Long, now: Long, zone: TimeZone): HistoryGroup {
     return HistoryGroup.EARLIER
 }
 
-fun historyMeta(e: HistoryEntry): String {
-    val parts = mutableListOf(e.ext.uppercase(), e.qualityLabel)
+fun historyMeta(e: HistoryEntry, quality: String = e.qualityLabel): String {
+    val parts = mutableListOf(e.ext.uppercase(), quality)
     e.sizeBytes?.let { parts += formatSize(it) }
     return parts.joinToString(" · ")
 }
